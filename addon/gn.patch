@@ -1,0 +1,12 @@
+diff --git a/build/gen.py b/build/gen.py
+index 922bf46f..a746cc61 100755
+--- a/build/gen.py
++++ b/build/gen.py
+@@ -368,6 +368,7 @@ def WriteGNNinja(path, platform, host, options):
+         '-fno-exceptions',
+         '-fno-rtti',
+         '-fdiagnostics-color',
++        '-fPIC',
+         '-Wall',
+         '-Wextra',
+         '-Wno-unused-parameter',

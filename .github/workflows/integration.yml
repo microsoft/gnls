@@ -1,0 +1,17 @@
+name: Integration
+on:
+  push: {branches: [main]}
+  pull_request: {branches: [main]}
+jobs:
+  validate:
+    name: Validate
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2

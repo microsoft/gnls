@@ -1,0 +1,13 @@
+Checks: |
+  -*,
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  bugprone-*,
+  concurrency-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  modernize-*,
+  -readability-function-cognitive-complexity,
+WarningsAsErrors: '*'

@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "llvm-vs-code-extensions.vscode-clangd",
+    "vadimcn.vscode-lldb"
+  ]
+}

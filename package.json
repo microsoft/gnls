@@ -1,0 +1,90 @@
+{
+  "name": "gnls",
+  "displayName": "GN Language Server",
+  "publisher": "banl",
+  "version": "1.0.0",
+  "private": true,
+  "repository": "github:microsoft/gnls",
+  "main": "./build",
+  "engines": {
+    "vscode": "^1.57.0"
+  },
+  "activationEvents": [
+    "onLanguage:gn"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "gn",
+        "aliases": [
+          "GN",
+          "gn"
+        ],
+        "extensions": [
+          "gn",
+          "gni"
+        ],
+        "configuration": "./build/language.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "gn",
+        "scopeName": "source.gn",
+        "path": "./build/grammar.json"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^18.1.0",
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@rollup/plugin-typescript": "^8.2.1",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.3.1",
+    "@types/vscode": "^1.57.0",
+    "@typescript-eslint/eslint-plugin": "^4.28.2",
+    "@typescript-eslint/parser": "^4.28.2",
+    "eslint": "^7.30.0",
+    "jest": "^27.0.6",
+    "node-addon-api": "^4.0.0",
+    "node-gyp": "^8.1.0",
+    "prettier": "^2.3.2",
+    "rollup": "^2.53.1",
+    "rollup-plugin-terser": "^7.0.2",
+    "ts-jest": "^27.0.3",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5",
+    "vsce": "^1.95.1",
+    "vscode-languageclient": "^7.0.0",
+    "vscode-languageserver": "^7.0.0",
+    "vscode-languageserver-textdocument": "^1.0.1",
+    "vscode-uri": "^3.0.2"
+  },
+  "scripts": {
+    "prepare": "ts-node script prepare",
+    "build": "ts-node script build",
+    "debug": "ts-node script debug",
+    "test": "ts-node script test",
+    "format": "ts-node script format",
+    "package": "ts-node script package"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended"
+    ]
+  },
+  "prettier": {
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "jsxSingleQuote": true,
+    "bracketSpacing": false
+  }
+}

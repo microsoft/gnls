@@ -1,0 +1,10 @@
+node_modules
+addon/gn
+build
+compile_commands.json
+.cache
+*.log
+*.tgz
+*.swp
+*.vsix
+.DS_Store
