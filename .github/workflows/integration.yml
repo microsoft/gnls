@@ -15,3 +15,89 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+      - name: Install NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '*'
+          cache: npm
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install VisualStudio
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
+      - name: Install Tools
+        run: |
+          case "$RUNNER_OS" in
+            Linux)
+              sudo apt update
+              sudo apt install -y ninja-build clang-tidy-11 clang-format-11
+              sudo ln -sfnv "$(which clang-11)" /usr/local/bin/clang
+              sudo ln -sfnv "$(which clang++-11)" /usr/local/bin/clang++
+              sudo ln -sfnv "$(which clang-tidy-11)" /usr/local/bin/clang-tidy
+              sudo ln -sfnv "$(which clang-format-11)" /usr/local/bin/clang-format
+              ;;
+            macOS)
+              brew install ninja llvm
+              echo "$(brew --prefix llvm)/bin" >> $GITHUB_PATH
+              ;;
+            Windows)
+              choco install ninja
+              ;;
+            *)
+              echo "Unknown OS: $RUNNER_OS"
+              exit 1
+              ;;
+          esac
+      - name: Setup Cache
+        uses: actions/cache@v2
+        with:
+          key: ${{ runner.os }}-${{ hashFiles('addon/deps.json') }}
+          path: addon/gn
+      - name: Prepare Dependencies
+        run: npm ci
+      - name: Build Debug
+        run: npm run debug
+      - name: Run Test
+        run: npm test
+      - name: Build Release
+        run: npm run build
+      - name: Upload Archive
+        uses: actions/upload-artifact@v2
+        if: ${{ runner.os == 'Linux' }}
+        with:
+          name: archive
+          path: |
+            README.md
+            package.json
+            build
+            !build/*.node
+      - name: Upload Addons
+        uses: actions/upload-artifact@v2
+        with:
+          name: addons
+          path: build/*.node
+  build:
+    name: Build
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Archive
+        uses: actions/download-artifact@v2
+        with:
+          name: archive
+          path: .
+      - name: Download Addons
+        uses: actions/download-artifact@v2
+        with:
+          name: addons
+          path: build
+      - name: Generate Packages
+        run: npx vsce package --out gnls.vsix
+      - name: Upload Packages
+        uses: actions/upload-artifact@v2
+        with:
+          name: packages
+          path: gnls.vsix
