@@ -14,7 +14,7 @@ Code IntelliSense for [GN](https://gn.googlesource.com/gn) build system.
 
 Currently there are no options to configure. Simply install the corresponding editor extension, and you are good to go:
 
-- [VS Code]()
+- [VS Code](https://marketplace.visualstudio.com/items?itemName=msedge-dev.gnls)
 
 ## License
 

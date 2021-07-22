@@ -1,14 +1,32 @@
 {
   "name": "gnls",
+  "publisher": "msedge-dev",
+  "version": "0.1.0",
   "displayName": "GN Language Server",
-  "publisher": "banl",
-  "version": "1.0.0",
-  "private": true,
-  "repository": "github:microsoft/gnls",
+  "description": "Code IntelliSense for GN build system.",
+  "license": "SEE LICENSE IN LICENSE",
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "gn",
+    "chromium"
+  ],
+  "homepage": "https://github.com/microsoft/gnls",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/gnls.git"
+  },
+  "bugs": {
+    "url": "https://github.com/microsoft/gnls/issues"
+  },
   "main": "./build",
   "engines": {
     "vscode": "^1.57.0"
   },
+  "extensionKind": [
+    "workspace"
+  ],
   "activationEvents": [
     "onLanguage:gn"
   ],
