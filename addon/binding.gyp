@@ -54,6 +54,7 @@
             'WarnAsError': 'true',
             'DisableSpecificWarnings': [
               '4100',
+              '4127',
             ],
             'AdditionalOptions': [
               '-std:c++17',
