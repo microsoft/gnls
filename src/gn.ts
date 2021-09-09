@@ -38,7 +38,7 @@ export interface Help {
   link: string
 }
 
-const addon = require(`../build/${os.platform()}.node`) // eslint-disable-line @typescript-eslint/no-var-requires
+const addon = require(`../build/${os.platform()}-${os.arch()}.node`) // eslint-disable-line @typescript-eslint/no-var-requires
 export const update = addon.update as (file: string, content: string) => void
 export const close = addon.close as (file: string) => void
 export const validate = addon.validate as (file: string) => Error
