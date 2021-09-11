@@ -1,7 +1,7 @@
 {
   "name": "gnls",
   "publisher": "msedge-dev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "GN Language Server",
   "description": "Code IntelliSense for GN build system.",
   "license": "SEE LICENSE IN LICENSE",
