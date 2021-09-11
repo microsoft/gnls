@@ -1,3 +1,5 @@
+import * as ls from 'vscode-languageserver/node'
+
 export type TestAnalyzeResultType = {
   location: string
   root: string
@@ -16,6 +18,7 @@ export type TestAnalyzeResultType = {
   variable: string
 }
 
+//#region RootGN data
 export const rootGNAnalyzeResult: TestAnalyzeResultType[] = [
   {
     // ':hello_static' in executable('hello')
@@ -51,6 +54,61 @@ export const rootGNAnalyzeResult: TestAnalyzeResultType[] = [
   },
 ]
 
+export const rootGNDocumentSymbolResult: ls.DocumentSymbol[] = [
+  ls.DocumentSymbol.create(
+    'config("compiler_defaults")',
+    undefined,
+    ls.SymbolKind.Function,
+    ls.Range.create(5, 0, 12, 1),
+    ls.Range.create(5, 0, 5, 28),
+    [
+      ls.DocumentSymbol.create(
+        'current_os == "linux"',
+        undefined,
+        ls.SymbolKind.Boolean,
+        ls.Range.create(6, 3, 11, 3),
+        ls.Range.create(6, 3, 6, 29),
+        [
+          ls.DocumentSymbol.create(
+            'cflags',
+            undefined,
+            ls.SymbolKind.Variable,
+            ls.Range.create(7, 5, 10, 5),
+            ls.Range.create(7, 5, 7, 11)
+          ),
+        ]
+      ),
+    ]
+  ),
+  ls.DocumentSymbol.create(
+    'config("executable_ldconfig")',
+    undefined,
+    ls.SymbolKind.Function,
+    ls.Range.create(14, 0, 21, 1),
+    ls.Range.create(14, 0, 14, 30),
+    [
+      ls.DocumentSymbol.create(
+        '!is_mac',
+        undefined,
+        ls.SymbolKind.Boolean,
+        ls.Range.create(15, 3, 20, 3),
+        ls.Range.create(15, 3, 15, 15),
+        [
+          ls.DocumentSymbol.create(
+            'ldflags',
+            undefined,
+            ls.SymbolKind.Variable,
+            ls.Range.create(16, 5, 19, 5),
+            ls.Range.create(16, 5, 16, 12)
+          ),
+        ]
+      ),
+    ]
+  ),
+]
+//#endregion
+
+//#region ToolchainGN data
 export const toolchainGNAnalyzeResult: TestAnalyzeResultType[] = [
   {
     location: '42:32',
@@ -64,3 +122,4 @@ export const toolchainGNAnalyzeResult: TestAnalyzeResultType[] = [
     variable: 'os_specific_option',
   },
 ]
+//#endregion
