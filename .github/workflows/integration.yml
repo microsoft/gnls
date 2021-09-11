@@ -71,6 +71,8 @@ jobs:
           name: archive
           path: |
             README.md
+            CHANGELOG.md
+            LICENSE
             package.json
             build
             !build/*.node
