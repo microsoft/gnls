@@ -15,8 +15,8 @@
       '<(rootdir)/gn/src',
     ],
     'libraries': [
-      '<(rootdir)/gn/out/base<(STATIC_LIB_SUFFIX)',
-      '<(rootdir)/gn/out/gn_lib<(STATIC_LIB_SUFFIX)',
+      '<(rootdir)/gn/out/<(target_arch)/base<(STATIC_LIB_SUFFIX)',
+      '<(rootdir)/gn/out/<(target_arch)/gn_lib<(STATIC_LIB_SUFFIX)',
     ],
     'cflags_cc': [
       '-std=c++17',

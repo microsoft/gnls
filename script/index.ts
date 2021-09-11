@@ -17,20 +17,26 @@ function lib(name: string): string {
 }
 
 function list(dir: string, regex: RegExp): string[] {
+  dir = canonicalize(dir)
   const entries = fs.readdirSync(dir)
   return entries.filter((entry) => entry.match(regex)).map((entry) => path.join(dir, entry))
 }
 
 function pipe(cmd: string, ...args: string[]): string {
+  cmd = canonicalize(cmd)
+  args = args.filter(Boolean)
   const result = child_process.spawnSync(cmd, args, {stdio: 'pipe'})
   return result.stdout.toString()
 }
 
 function chdir(dir: string) {
-  process.chdir(path.join(__dirname, '..', ...dir.split(path.posix.sep)))
+  dir = canonicalize(dir)
+  process.chdir(path.join(__dirname, '..', dir))
 }
 
 function exec(cmd: string, ...args: string[]) {
+  cmd = canonicalize(cmd)
+  args = args.filter(Boolean)
   const result = child_process.spawnSync(cmd, args, {stdio: 'inherit'})
   if (result.status !== 0) {
     console.error('Failed to execute:', cmd, ...args, `(${result.error?.message})`)
@@ -70,8 +76,50 @@ function ensure(deps: string) {
   })
 }
 
-function compdb(file: string) {
-  file = canonicalize(file)
+function bundle(debug: boolean) {
+  const environment = debug ? 'development' : 'production'
+  chdir('.')
+  exec(npx('rollup'), '--config', '--environment', `NODE_ENV:${environment}`)
+}
+
+function addon(debug: boolean, arch: string) {
+  const cflags = []
+  switch (os.platform()) {
+    case 'linux':
+      // TODO: not implemented
+      break
+    case 'darwin':
+      switch (arch) {
+        case 'x64':
+          cflags.push('-arch', 'x86_64')
+          break
+        case 'arm64':
+          cflags.push('-arch', 'arm64')
+          break
+      }
+      break
+    case 'win32':
+      // TODO: not implemented
+      break
+  }
+  process.env.CFLAGS = cflags.join(' ')
+  chdir('addon/gn')
+  // TODO(#8): gn static libs are always built with release config for now
+  exec('python', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
+  exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
+  delete process.env.CFLAGS
+  chdir('addon')
+  exec(npx('node-gyp'), 'rebuild', debug && '--debug', '--arch', arch)
+  copy(`build/${debug ? 'Debug' : 'Release'}/addon.node`, `../build/${os.platform()}-${arch}.node`)
+}
+
+function compdb() {
+  const file = 'compile_commands.json'
+  chdir('addon')
+  exec(npx('node-gyp'), 'configure', '--', '--format=compile_commands_json')
+  copy(`Debug/${file}`, file)
+  remove('Debug')
+  remove('Release')
   const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as {[key: string]: string}[]
   const fixes = [] as [RegExp, string][]
   switch (os.platform()) {
@@ -88,50 +136,33 @@ function compdb(file: string) {
   fs.writeFileSync(file, JSON.stringify(data))
 }
 
-function build(target: string) {
+function run(target: string) {
   switch (target) {
-    case 'dep':
+    case 'prepare':
       chdir('addon')
       ensure('deps.json')
-      chdir('addon/gn/build')
-      exec('python', 'gen.py')
-      chdir('addon/gn/out')
-      exec('ninja', lib('base'), lib('gn_lib'))
-      break
-    case 'syntax':
       chdir('script')
       exec(npx('ts-node'), 'syntax.ts', '../build')
+      compdb()
       break
-    case 'main':
-      chdir('.')
-      exec(npx('rollup'), '--config', '--environment', 'NODE_ENV:production')
-      break
-    case 'main2':
-      chdir('.')
-      exec(npx('rollup'), '--config', '--environment', 'NODE_ENV:development')
-      break
-    case 'addon':
-      chdir('addon')
-      exec(npx('node-gyp'), 'rebuild')
-      copy('build/Release/addon.node', `../build/${os.platform()}.node`)
-      break
-    case 'addon2':
-      if (os.platform() != 'win32') {
-        chdir('addon')
-        exec(npx('node-gyp'), 'build', '--debug')
-        copy('build/Debug/addon.node', `../build/${os.platform()}.node`)
+    case 'build':
+      bundle(false)
+      if (os.platform() == 'darwin') {
+        addon(false, 'x64')
+        addon(false, 'arm64')
       } else {
-        console.warn('Debug build not working on Windows yet. Fallback to release build.')
-        build('addon')
+        console.warn('Addon cross compiling is only implemented on macOS 11 for now.')
+        addon(false, os.arch())
       }
       break
-    case 'compdb':
-      chdir('addon')
-      exec(npx('node-gyp'), 'configure', '--', '--format=compile_commands_json')
-      copy('Debug/compile_commands.json', 'compile_commands.json')
-      compdb('compile_commands.json')
-      remove('Debug')
-      remove('Release')
+    case 'debug':
+      bundle(true)
+      if (os.platform() != 'win32') {
+        addon(true, os.arch())
+      } else {
+        console.warn('Addon debug build is not working on Windows yet. Fallback to release build.')
+        addon(false, os.arch())
+      }
       break
     case 'test':
       chdir('.')
@@ -149,22 +180,9 @@ function build(target: string) {
       chdir('.')
       exec(npx('vsce'), 'package', '--out', 'gnls.vsix')
       break
-    case 'prepare':
-      build('dep')
-      build('syntax')
-      build('compdb')
-      break
-    case 'build':
-      build('main')
-      build('addon')
-      break
-    case 'debug':
-      build('main2')
-      build('addon2')
-      break
     default:
       break
   }
 }
 
-build(process.argv[2])
+run(process.argv[2])
