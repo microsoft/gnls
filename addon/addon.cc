@@ -82,6 +82,21 @@ static auto JSValue(Napi::Env env, const std::vector<T>& vector)
   return result;
 }
 
+template <typename T>
+static auto JSValue(Napi::Env env, const std::list<T>& list) -> Napi::Value {
+  auto result = Napi::Array::New(env);
+  for (const auto& item : list) {
+    result[result.Length()] = JSValue(env, item);
+  }
+  return result;
+}
+
+template <typename T>
+static auto JSValue(Napi::Env env, const std::unique_ptr<T>& ptr)
+    -> Napi::Value {
+  return JSValue(env, *ptr);
+}
+
 static auto JSValue(Napi::Env env, const Location& location) -> Napi::Value {
   auto result = Napi::Object::New(env);
   result["file"] = location.file()->name().value();
@@ -170,6 +185,35 @@ static auto JSValue(Napi::Env env, const GNScope& scope) -> Napi::Value {
     declares[declares.Length()] = declare;
   }
   result["declares"] = declares;
+  return result;
+}
+
+static auto JSValue(Napi::Env env, const GNDocumentSymbolPosition& symbol)
+    -> Napi::Value {
+  auto result = Napi::Object::New(env);
+  result["line"] = symbol.line;
+  result["character"] = symbol.character;
+  return result;
+}
+
+static auto JSValue(Napi::Env env, const GNDocumentSymbolRange& range)
+    -> Napi::Value {
+  auto result = Napi::Object::New(env);
+  result["start"] = JSValue(env, range.start);
+  result["end"] = JSValue(env, range.end);
+  return result;
+}
+
+static auto JSValue(Napi::Env env, const GNDocumentSymbol& symbol)
+    -> Napi::Value {
+  auto result = Napi::Object::New(env);
+  result["kind"] = static_cast<int>(symbol.kind);
+  result["name"] = symbol.name;
+  result["range"] = JSValue(env, symbol.range);
+  result["selectionRange"] = JSValue(env, symbol.selection_range);
+  if (!symbol.children.empty()) {
+    result["children"] = JSValue(env, symbol.children);
+  }
   return result;
 }
 
