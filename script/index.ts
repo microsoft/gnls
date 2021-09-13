@@ -109,7 +109,8 @@ function addon(debug: boolean, arch: string) {
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
   chdir('addon')
-  exec(npx('node-gyp'), 'rebuild', debug && '--debug', '--arch', arch)
+  exec(npx('cmake-js'), 'build', '--arch', arch, `-DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'}`)
+  // exec(npx('node-gyp'), 'rebuild', debug && '--debug', '--arch', arch)
   copy(`build/${debug ? 'Debug' : 'Release'}/addon.node`, `../build/${os.platform()}-${arch}.node`)
 }
 
