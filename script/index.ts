@@ -108,12 +108,16 @@ function addon(debug: boolean, arch: string) {
   exec('python', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
+  cmake(debug, arch, true)
+}
+
+function cmake(debug: boolean, arch: string, build: boolean) {
   chdir('.')
   exec(
     npx('cmake-js'),
     '-d',
     'addon',
-    'rebuild',
+    build ? 'rebuild' : 'reconfigure',
     '--arch',
     arch,
     '-D',
@@ -122,14 +126,17 @@ function addon(debug: boolean, arch: string) {
     'addon/build',
     '--prefer-clang'
   )
-  copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
+  if (build) {
+    copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
+  } else {
+    copy(`addon/build/compile_commands.json`, `addon/compile_commands.json`)
+  }
 }
 
 function compdb() {
+  cmake(true, 'x64', false)
   const file = 'compile_commands.json'
   chdir('addon')
-  exec(npx('node-gyp'), 'configure', '--', '--format=compile_commands_json')
-  copy(`Debug/${file}`, file)
   remove('Debug')
   remove('Release')
   const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as {[key: string]: string}[]
