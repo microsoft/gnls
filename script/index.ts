@@ -128,15 +128,18 @@ function cmake(debug: boolean, arch: string, build: boolean) {
   )
   if (build) {
     copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
-  } else {
-    copy(`addon/build/compile_commands.json`, `addon/compile_commands.json`)
   }
 }
 
 function compdb() {
-  cmake(true, 'x64', false)
   const file = 'compile_commands.json'
+  cmake(true, 'x64', false)
   chdir('addon')
+  if (!fs.existsSync(`build/${file}`)) {
+    console.warn('compile_commands.json is not supported.')
+    return
+  }
+  copy(`build/${file}`, file)
   remove('Debug')
   remove('Release')
   const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as {[key: string]: string}[]
@@ -188,7 +191,10 @@ function run(target: string) {
       exec(npx('jest'))
       exec(npx('eslint'), '.')
       exec(npx('prettier'), '--check', '.')
-      exec('clang-tidy', ...list('addon', /\.cc$/))
+      if (os.platform() != 'win32') {
+        // TODO: compile_commands.json is not supported by cmake on windows.
+        exec('clang-tidy', ...list('addon', /\.cc$/))
+      }
       exec('clang-format', '--dry-run', '-Werror', ...list('addon', /\.cc$/))
       break
     case 'format':
