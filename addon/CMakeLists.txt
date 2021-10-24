@@ -16,7 +16,8 @@ target_link_libraries(
         ${CMAKE_JS_LIB}
         ${CMAKE_SOURCE_DIR}/gn/out/${NODE_ARCH}/base${CMAKE_STATIC_LIBRARY_SUFFIX}
         ${CMAKE_SOURCE_DIR}/gn/out/${NODE_ARCH}/gn_lib${CMAKE_STATIC_LIBRARY_SUFFIX}
-        -Wl,--end-group)
+        -Wl,--end-group
+        )
 
 # Include node-addon-api wrappers
 execute_process(COMMAND node -p "require('node-addon-api').include"

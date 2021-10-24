@@ -122,7 +122,6 @@ function addon(debug: boolean, arch: string) {
     'addon/build',
     '--prefer-clang'
   )
-  // exec(npx('node-gyp'), 'rebuild', debug && '--debug', '--arch', arch)
   copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
 }
 

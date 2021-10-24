@@ -62,6 +62,7 @@
     "@types/vscode": "^1.60.0",
     "@typescript-eslint/eslint-plugin": "^4.31.0",
     "@typescript-eslint/parser": "^4.31.0",
+    "cmake-js": "^6.2.1",
     "eslint": "^7.32.0",
     "jest": "^27.1.1",
     "node-addon-api": "^4.1.0",
@@ -104,8 +105,5 @@
     "singleQuote": true,
     "jsxSingleQuote": true,
     "bracketSpacing": false
-  },
-  "dependencies": {
-    "cmake-js": "^6.2.1"
   }
 }
