@@ -116,7 +116,7 @@ function addon(debug: boolean, arch: string) {
     'rebuild',
     '--arch',
     arch,
-    '-B',
+    '-CBCMAKE_BUILD_TYPE',
     debug ? 'Debug' : 'Release',
     '--out',
     'addon/build',
