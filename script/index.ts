@@ -108,10 +108,22 @@ function addon(debug: boolean, arch: string) {
   exec('python', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
-  chdir('addon')
-  exec(npx('cmake-js'), 'build', '--arch', arch, `-DCMAKE_BUILD_TYPE=${debug ? 'Debug' : 'Release'}`)
+  chdir('.')
+  exec(
+    npx('cmake-js'),
+    '-d',
+    'addon',
+    'rebuild',
+    '--arch',
+    arch,
+    '-B',
+    debug ? 'Debug' : 'Release',
+    '--out',
+    'addon/build',
+    '--prefer-clang'
+  )
   // exec(npx('node-gyp'), 'rebuild', debug && '--debug', '--arch', arch)
-  copy(`build/${debug ? 'Debug' : 'Release'}/addon.node`, `../build/${os.platform()}-${arch}.node`)
+  copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
 }
 
 function compdb() {
