@@ -109,6 +109,7 @@ function addon(debug: boolean, arch: string) {
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
   chdir('.')
+  console.log(debug)
   exec(
     npx('cmake-js'),
     '-d',
@@ -116,8 +117,8 @@ function addon(debug: boolean, arch: string) {
     'rebuild',
     '--arch',
     arch,
-    '-CBCMAKE_BUILD_TYPE',
-    debug ? 'Debug' : 'Release',
+    '-D',
+    `${debug}`,
     '--out',
     'addon/build',
     '--prefer-clang'
