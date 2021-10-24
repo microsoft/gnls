@@ -109,7 +109,6 @@ function addon(debug: boolean, arch: string) {
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
   chdir('.')
-  console.log(debug)
   exec(
     npx('cmake-js'),
     '-d',
