@@ -48,10 +48,6 @@ function copy(src: string, dst: string) {
   fs.copyFileSync(canonicalize(src), canonicalize(dst))
 }
 
-function remove(file: string) {
-  fs.rmSync(canonicalize(file), {recursive: true, force: true})
-}
-
 function ensure(deps: string) {
   const data = JSON.parse(fs.readFileSync(canonicalize(deps), {encoding: 'utf8'})) as {
     name: string
@@ -82,6 +78,26 @@ function bundle(debug: boolean) {
   exec(npx('rollup'), '--config', '--environment', `NODE_ENV:${environment}`)
 }
 
+function cmake(debug: boolean, arch: string, build: boolean) {
+  chdir('.')
+  exec(
+    npx('cmake-js'),
+    '-d',
+    'addon',
+    build ? 'rebuild' : 'reconfigure',
+    '--arch',
+    arch,
+    '-D',
+    `${debug}`,
+    '--out',
+    'addon/build',
+    '--prefer-clang'
+  )
+  if (build) {
+    copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
+  }
+}
+
 function addon(debug: boolean, arch: string) {
   const cflags = []
   switch (os.platform()) {
@@ -109,26 +125,6 @@ function addon(debug: boolean, arch: string) {
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
   cmake(debug, arch, true)
-}
-
-function cmake(debug: boolean, arch: string, build: boolean) {
-  chdir('.')
-  exec(
-    npx('cmake-js'),
-    '-d',
-    'addon',
-    build ? 'rebuild' : 'reconfigure',
-    '--arch',
-    arch,
-    '-D',
-    `${debug}`,
-    '--out',
-    'addon/build',
-    '--prefer-clang'
-  )
-  if (build) {
-    copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
-  }
 }
 
 function compdb() {
@@ -162,7 +158,7 @@ function run(target: string) {
       if (os.platform() != 'win32') {
         compdb()
       } else {
-        console.warn('compile_commands.json is not supported.')
+        console.warn('Generating compile_commands.json is not supported on Windows.')
       }
       break
     case 'build':
