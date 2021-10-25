@@ -135,13 +135,7 @@ function compdb() {
   const file = 'compile_commands.json'
   cmake(true, 'x64', false)
   chdir('addon')
-  if (!fs.existsSync(`build/${file}`)) {
-    console.warn('compile_commands.json is not supported.')
-    return
-  }
   copy(`build/${file}`, file)
-  remove('Debug')
-  remove('Release')
   const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as {[key: string]: string}[]
   const fixes = [] as [RegExp, string][]
   switch (os.platform()) {
@@ -165,7 +159,11 @@ function run(target: string) {
       ensure('deps.json')
       chdir('script')
       exec(npx('ts-node'), 'syntax.ts', '../build')
-      compdb()
+      if (os.platform() != 'win32') {
+        compdb()
+      } else {
+        console.warn('compile_commands.json is not supported.')
+      }
       break
     case 'build':
       bundle(false)

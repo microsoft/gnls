@@ -5,10 +5,6 @@
 #include <utility>
 #include <vector>
 
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4244)
-#endif
 #include <napi.h>
 
 #include <base/files/file_util.h>
@@ -19,9 +15,6 @@
 #include <gn/parser.h>
 #include <gn/tokenizer.h>
 #include <gn/variables.h>
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
 
 struct GNContext {
   const base::FilePath* root = nullptr;
