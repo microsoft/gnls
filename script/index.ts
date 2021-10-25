@@ -48,6 +48,10 @@ function copy(src: string, dst: string) {
   fs.copyFileSync(canonicalize(src), canonicalize(dst))
 }
 
+function remove(file: string) {
+  fs.rmSync(canonicalize(file), {recursive: true, force: true})
+}
+
 function ensure(deps: string) {
   const data = JSON.parse(fs.readFileSync(canonicalize(deps), {encoding: 'utf8'})) as {
     name: string
@@ -78,26 +82,6 @@ function bundle(debug: boolean) {
   exec(npx('rollup'), '--config', '--environment', `NODE_ENV:${environment}`)
 }
 
-function cmake(debug: boolean, arch: string, build: boolean) {
-  chdir('.')
-  exec(
-    npx('cmake-js'),
-    '-d',
-    'addon',
-    build ? 'rebuild' : 'reconfigure',
-    '--arch',
-    arch,
-    '-D',
-    `${debug}`,
-    '--out',
-    'addon/build',
-    '--prefer-clang'
-  )
-  if (build) {
-    copy(`addon/build/${debug ? 'Debug' : 'Release'}/addon.node`, `build/${os.platform()}-${arch}.node`)
-  }
-}
-
 function addon(debug: boolean, arch: string) {
   const cflags = []
   switch (os.platform()) {
@@ -124,14 +108,18 @@ function addon(debug: boolean, arch: string) {
   exec('python', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
-  cmake(debug, arch, true)
+  chdir('addon')
+  exec(npx('node-gyp'), 'rebuild', debug && '--debug', '--arch', arch)
+  copy(`build/${debug ? 'Debug' : 'Release'}/addon.node`, `../build/${os.platform()}-${arch}.node`)
 }
 
 function compdb() {
   const file = 'compile_commands.json'
-  cmake(true, 'x64', false)
   chdir('addon')
-  copy(`build/${file}`, file)
+  exec(npx('node-gyp'), 'configure', '--', '--format=compile_commands_json')
+  copy(`Debug/${file}`, file)
+  remove('Debug')
+  remove('Release')
   const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as {[key: string]: string}[]
   const fixes = [] as [RegExp, string][]
   switch (os.platform()) {
@@ -155,11 +143,7 @@ function run(target: string) {
       ensure('deps.json')
       chdir('script')
       exec(npx('ts-node'), 'syntax.ts', '../build')
-      if (os.platform() != 'win32') {
-        compdb()
-      } else {
-        console.warn('Generating compile_commands.json is not supported on Windows.')
-      }
+      compdb()
       break
     case 'build':
       bundle(false)
@@ -185,10 +169,7 @@ function run(target: string) {
       exec(npx('jest'))
       exec(npx('eslint'), '.')
       exec(npx('prettier'), '--check', '.')
-      if (os.platform() != 'win32') {
-        // TODO: compile_commands.json is not supported by cmake on windows.
-        exec('clang-tidy', ...list('addon', /\.cc$/))
-      }
+      exec('clang-tidy', ...list('addon', /\.cc$/))
       exec('clang-format', '--dry-run', '-Werror', ...list('addon', /\.cc$/))
       break
     case 'format':
