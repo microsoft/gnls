@@ -53,24 +53,24 @@ struct GNDocumentSymbolRange {
 struct GNDocumentSymbol {
   GNDocumentSymbol() = delete;
   GNDocumentSymbol(const GNSymbolKind kind,
-                   std::string name,
                    const LocationRange& range,
+                   std::string name,
                    const LocationRange& selection_range)
       : kind(kind),
-        name(std::move(name)),
         range(range),
+        name(std::move(name)),
         selection_range(selection_range) {}
 
   GNSymbolKind kind = GNSymbolKind::Unknown;
-  std::string name;
   GNDocumentSymbolRange range;
+  std::string name;
   GNDocumentSymbolRange selection_range;
-  std::list<std::unique_ptr<GNDocumentSymbol>> children;
+  std::list<GNDocumentSymbol> children;
 };
 
 struct GNScope {
   std::vector<const FunctionCallNode*> declares;
-  std::list<std::unique_ptr<GNDocumentSymbol>> symbols;
+  std::list<GNDocumentSymbol> symbols;
 };
 
 template <typename T>
@@ -90,12 +90,6 @@ static auto JSValue(Napi::Env env, const std::list<T>& list) -> Napi::Value {
     result[result.Length()] = JSValue(env, item);
   }
   return result;
-}
-
-template <typename T>
-static auto JSValue(Napi::Env env, const std::unique_ptr<T>& ptr)
-    -> Napi::Value {
-  return JSValue(env, *ptr);
 }
 
 static auto JSValue(Napi::Env env, const Location& location) -> Napi::Value {
@@ -454,8 +448,8 @@ class GNDocument {
   }
 
   auto ConstructDocumentSymbolAST(const ParseNode* node)
-      -> std::list<std::unique_ptr<GNDocumentSymbol>> {
-    std::list<std::unique_ptr<GNDocumentSymbol>> result;
+      -> std::list<GNDocumentSymbol> {
+    std::list<GNDocumentSymbol> result;
     if (node == nullptr) {
       return result;
     }
@@ -470,30 +464,30 @@ class GNDocument {
         case Token::EQUAL:
         case Token::PLUS_EQUALS:
         case Token::MINUS_EQUALS:
-          result.emplace_back(std::make_unique<GNDocumentSymbol>(
-              GNSymbolKind::Variable, ExpressionToString(binary_op->left()),
-              binary_op->GetRange(), binary_op->left()->GetRange()));
+          result.emplace_back(GNSymbolKind::Variable, binary_op->GetRange(),
+                              ExpressionToString(binary_op->left()),
+                              binary_op->left()->GetRange());
         default:;
       }
     } else if (const auto* function_call = node->AsFunctionCall()) {
       // Call        = identifier "(" [ ExprList ] ")" [ Block ] .
       LocationRange selection_range = function_call->function().range().Union(
           function_call->args()->GetRange());
-      auto symbol = std::make_unique<GNDocumentSymbol>(
-          GNSymbolKind::Function, ExpressionToString(function_call),
-          function_call->GetRange(), selection_range);
-      symbol->children = ConstructDocumentSymbolAST(function_call->block());
-      result.emplace_back(std::move(symbol));
+      GNDocumentSymbol symbol(GNSymbolKind::Function, function_call->GetRange(),
+                              ExpressionToString(function_call),
+                              selection_range);
+      symbol.children = ConstructDocumentSymbolAST(function_call->block());
+      result.emplace_back(symbol);
     } else if (const auto* condition = node->AsCondition()) {
       // Condition     = "if" "(" Expr ")" Block
       //                 [ "else" ( Condition | Block ) ] .
-      auto symbol = std::make_unique<GNDocumentSymbol>(
-          GNSymbolKind::Boolean, ExpressionToString(condition->condition()),
-          condition->GetRange(), condition->condition()->GetRange());
-      symbol->children = ConstructDocumentSymbolAST(condition->if_true());
+      GNDocumentSymbol symbol(GNSymbolKind::Boolean, condition->GetRange(),
+                              ExpressionToString(condition->condition()),
+                              condition->condition()->GetRange());
+      symbol.children = ConstructDocumentSymbolAST(condition->if_true());
       if (condition->if_false() != nullptr) {
-        symbol->children.splice(
-            symbol->children.end(),
+        symbol.children.splice(
+            symbol.children.end(),
             ConstructDocumentSymbolAST(condition->if_false()));
       }
       result.emplace_back(std::move(symbol));
