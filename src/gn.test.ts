@@ -1,6 +1,7 @@
 import * as gn from './gn'
 import * as fs from 'fs/promises'
 import * as testData from './gn.test.data'
+import * as ls from 'vscode-languageserver/node'
 
 const root = './addon/gn/examples/simple_build'
 
@@ -28,6 +29,17 @@ function testGNAnalyze(rootPath: string, data: testData.TestAnalyzeResultType[])
   })
 }
 
+function matchDocumentSymbol(symbol: ls.DocumentSymbol, data: testData.TestDocumentSymbol) {
+  expect(symbol.name).toEqual(data.name)
+  expect(symbol.kind).toEqual(data.kind)
+  expect(symbol.children?.length || 0).toEqual(data.children?.length || 0)
+  if (data.children) {
+    data.children.forEach((it, i) => {
+      matchDocumentSymbol(symbol.children[i], it)
+    })
+  }
+}
+
 it('simple_build/BUILD.gn', async () => {
   const rootPath = `${root}/BUILD.gn`
   const rootContent = await fs.readFile(rootPath, 'utf-8')
@@ -51,4 +63,16 @@ it('simple_build/build/toolchain/BUILD.gn', async () => {
   testGNAnalyze(rootPath, testData.toolchainGNAnalyzeResult)
 
   gn.close(rootPath)
+})
+
+it('simple_build/build/BUILD.gn', async () => {
+  const rootPath = `${root}/build/BUILD.gn`
+  const rootContent = await fs.readFile(rootPath, 'utf-8')
+  gn.update(rootPath, rootContent)
+
+  const scope = gn.parse(rootPath, rootContent)
+  expect(scope.symbols.length).toEqual(testData.rootGNBuildDocumentSymbolResult.length)
+  testData.rootGNBuildDocumentSymbolResult.forEach((it, i) => {
+    matchDocumentSymbol(scope.symbols[i], it)
+  })
 })

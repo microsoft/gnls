@@ -1,4 +1,5 @@
 import * as os from 'os'
+import * as ls from 'vscode-languageserver/node'
 
 export type TokenType = 'identifier' | 'literal' | ''
 export type HelpType = 'all' | 'function' | 'variable'
@@ -30,6 +31,7 @@ export interface Context {
 
 export interface Scope {
   declares: {function: string; arguments: string[]; range: Range}[]
+  symbols: ls.DocumentSymbol[]
 }
 
 export interface Help {

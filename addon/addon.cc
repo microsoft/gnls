@@ -27,10 +27,6 @@ struct GNContext {
   const IdentifierNode* variable = nullptr;
 };
 
-struct GNScope {
-  std::vector<const FunctionCallNode*> declares;
-};
-
 enum class GNSymbolKind {
   Unknown = 0,
   Function = 12,
@@ -70,6 +66,11 @@ struct GNDocumentSymbol {
   GNDocumentSymbolRange range;
   GNDocumentSymbolRange selection_range;
   std::list<std::unique_ptr<GNDocumentSymbol>> children;
+};
+
+struct GNScope {
+  std::vector<const FunctionCallNode*> declares;
+  std::list<std::unique_ptr<GNDocumentSymbol>> symbols;
 };
 
 template <typename T>
@@ -185,6 +186,7 @@ static auto JSValue(Napi::Env env, const GNScope& scope) -> Napi::Value {
     declares[declares.Length()] = declare;
   }
   result["declares"] = declares;
+  result["symbols"] = JSValue(env, scope.symbols);
   return result;
 }
 
@@ -310,6 +312,7 @@ class GNDocument {
         }
       }
     }
+    scope.symbols = ConstructDocumentSymbolAST(node_.get());
     return scope;
   }
 
@@ -441,6 +444,9 @@ class GNDocument {
       }
       return str.append(ExpressionToString(list->End()));
     }
+    if (const auto* literal = node->AsLiteral()) {
+      return std::string(TokenToString(literal->value()));
+    }
     if (const auto* end = node->AsEnd()) {
       return std::string().append(TokenToString(end->value()));
     }
@@ -450,6 +456,9 @@ class GNDocument {
   auto ConstructDocumentSymbolAST(const ParseNode* node)
       -> std::list<std::unique_ptr<GNDocumentSymbol>> {
     std::list<std::unique_ptr<GNDocumentSymbol>> result;
+    if (node == nullptr) {
+      return result;
+    }
 
     // Only handle statement like node.
     // StatementList = { Statement } .
