@@ -21,6 +21,7 @@ connection.onInitialize(() => {
       hoverProvider: true,
       definitionProvider: true,
       documentFormattingProvider: true,
+      documentSymbolProvider: true,
     },
   }
 })
@@ -48,6 +49,12 @@ documents.onDidClose((event) => {
       diagnostics: [],
     })
   }
+})
+
+connection.onDocumentSymbol((params) => {
+  const uri = params.textDocument.uri
+  const file = URI.parse(uri).fsPath
+  return gn.parse(file).symbols
 })
 
 connection.onCompletion((params) => {
