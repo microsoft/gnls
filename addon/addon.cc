@@ -35,16 +35,6 @@ enum class GNSymbolKind {
 };
 
 struct GNDocumentSymbol {
-  GNDocumentSymbol() = delete;
-  GNDocumentSymbol(const GNSymbolKind kind,
-                   const LocationRange& range,
-                   std::string name,
-                   const LocationRange& selection_range)
-      : kind(kind),
-        range(range),
-        name(std::move(name)),
-        selection_range(selection_range) {}
-
   const GNSymbolKind kind = GNSymbolKind::Unknown;
   const LocationRange range;
   const std::string name;
@@ -432,27 +422,32 @@ class GNDocument {
         case Token::EQUAL:
         case Token::PLUS_EQUALS:
         case Token::MINUS_EQUALS:
-          result.emplace_back(GNSymbolKind::Variable, binary_op->GetRange(),
-                              ExpressionToString(binary_op->left()),
-                              binary_op->left()->GetRange());
+          result.emplace_back(
+              GNDocumentSymbol{GNSymbolKind::Variable,
+                               binary_op->GetRange(),
+                               ExpressionToString(binary_op->left()),
+                               binary_op->left()->GetRange(),
+                               {}});
         default:;
       }
     } else if (const auto* function_call = node->AsFunctionCall()) {
       // Call        = identifier "(" [ ExprList ] ")" [ Block ] .
       LocationRange selection_range = function_call->function().range().Union(
           function_call->args()->GetRange());
-      GNDocumentSymbol symbol(GNSymbolKind::Function, function_call->GetRange(),
+      GNDocumentSymbol symbol{GNSymbolKind::Function,
+                              function_call->GetRange(),
                               ExpressionToString(function_call),
-                              selection_range);
+                              selection_range,
+                              {}};
       symbol.children = ConstructDocumentSymbolAST(function_call->block());
       result.emplace_back(symbol);
     } else if (const auto* condition = node->AsCondition()) {
       // Condition     = "if" "(" Expr ")" Block
       //                 [ "else" ( Condition | Block ) ] .
-      GNDocumentSymbol symbol(GNSymbolKind::Boolean, condition->GetRange(),
+      GNDocumentSymbol symbol{GNSymbolKind::Boolean, condition->GetRange(),
                               ExpressionToString(condition->condition()),
-                              condition->condition()->GetRange());
-      symbol.children = ConstructDocumentSymbolAST(condition->if_true());
+                              condition->condition()->GetRange(),
+                              ConstructDocumentSymbolAST(condition->if_true())};
       if (condition->if_false() != nullptr) {
         symbol.children.splice(
             symbol.children.end(),
@@ -475,8 +470,6 @@ class GNDocument {
   std::vector<Token> tokens_;
   // Root node of GN context.
   std::unique_ptr<ParseNode> node_;
-  // Root node of DocumentSymbol, kind should be Root.
-  std::unique_ptr<GNDocumentSymbol> symbol_;
 };
 
 class GNAddon : public Napi::Addon<GNAddon> {
