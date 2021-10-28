@@ -34,22 +34,6 @@ enum class GNSymbolKind {
   Boolean = 17,
 };
 
-struct GNDocumentSymbolPosition {
-  GNDocumentSymbolPosition() = delete;
-  explicit GNDocumentSymbolPosition(const Location& location)
-      : line(location.line_number()), character(location.column_number()) {}
-  int line = 0;
-  int character = 0;
-};
-
-struct GNDocumentSymbolRange {
-  GNDocumentSymbolRange() = delete;
-  explicit GNDocumentSymbolRange(const LocationRange& range)
-      : start(range.begin()), end(range.end()) {}
-  GNDocumentSymbolPosition start;
-  GNDocumentSymbolPosition end;
-};
-
 struct GNDocumentSymbol {
   GNDocumentSymbol() = delete;
   GNDocumentSymbol(const GNSymbolKind kind,
@@ -61,10 +45,10 @@ struct GNDocumentSymbol {
         name(std::move(name)),
         selection_range(selection_range) {}
 
-  GNSymbolKind kind = GNSymbolKind::Unknown;
-  GNDocumentSymbolRange range;
-  std::string name;
-  GNDocumentSymbolRange selection_range;
+  const GNSymbolKind kind = GNSymbolKind::Unknown;
+  const LocationRange range;
+  const std::string name;
+  const LocationRange selection_range;
   std::list<GNDocumentSymbol> children;
 };
 
@@ -181,22 +165,6 @@ static auto JSValue(Napi::Env env, const GNScope& scope) -> Napi::Value {
   }
   result["declares"] = declares;
   result["symbols"] = JSValue(env, scope.symbols);
-  return result;
-}
-
-static auto JSValue(Napi::Env env, const GNDocumentSymbolPosition& symbol)
-    -> Napi::Value {
-  auto result = Napi::Object::New(env);
-  result["line"] = symbol.line;
-  result["character"] = symbol.character;
-  return result;
-}
-
-static auto JSValue(Napi::Env env, const GNDocumentSymbolRange& range)
-    -> Napi::Value {
-  auto result = Napi::Object::New(env);
-  result["start"] = JSValue(env, range.start);
-  result["end"] = JSValue(env, range.end);
   return result;
 }
 

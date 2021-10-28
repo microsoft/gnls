@@ -1,7 +1,6 @@
 import * as gn from './gn'
 import * as fs from 'fs/promises'
 import * as testData from './gn.test.data'
-import * as ls from 'vscode-languageserver/node'
 
 const root = './addon/gn/examples/simple_build'
 
@@ -29,10 +28,18 @@ function testGNAnalyze(rootPath: string, data: testData.TestAnalyzeResultType[])
   })
 }
 
-function matchDocumentSymbol(symbol: ls.DocumentSymbol, data: testData.TestDocumentSymbol) {
+function matchDocumentSymbol(symbol: gn.GNDocumentSymbol, data: testData.TestDocumentSymbol) {
+  const assertRange = (range: gn.Range) => {
+    expect(range.begin.line).toBeGreaterThan(0)
+    expect(range.begin.column).toBeGreaterThan(0)
+    expect(range.end.line).toBeGreaterThan(0)
+    expect(range.end.column).toBeGreaterThan(0)
+  }
   expect(symbol.name).toEqual(data.name)
   expect(symbol.kind).toEqual(data.kind)
   expect(symbol.children?.length || 0).toEqual(data.children?.length || 0)
+  assertRange(symbol.range)
+  assertRange(symbol.selectionRange)
   if (data.children) {
     data.children.forEach((it, i) => {
       matchDocumentSymbol(symbol.children[i], it)
