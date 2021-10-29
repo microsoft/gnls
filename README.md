@@ -8,8 +8,8 @@ Code IntelliSense for [GN](https://gn.googlesource.com/gn) build system.
 - Auto completion for common targets, functions and variables.
 - Hover to view documentation for common targets, functions and variables.
 - Click to open referred target or file.
+- Provide hierarchy of targets and if conditions to help navigate in large files.
 - Code format.
-- Provide conditional information based on document symbol API.
 
 ## Usage
 

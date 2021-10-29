@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Add document symbol support for target definitions and if conditions
+
 ## 0.1.1
 
 - Add arm64 support for macOS
