@@ -32,6 +32,7 @@ enum class GNSymbolKind {
   Function = 12,
   Variable = 13,
   Boolean = 17,
+  Operator = 25,
 };
 
 struct GNDocumentSymbol {
@@ -448,10 +449,13 @@ class GNDocument {
                               ExpressionToString(condition->condition()),
                               condition->condition()->GetRange(),
                               ConstructDocumentSymbolAST(condition->if_true())};
-      if (condition->if_false() != nullptr) {
-        symbol.children.splice(
-            symbol.children.end(),
-            ConstructDocumentSymbolAST(condition->if_false()));
+      if (const auto* elseNode = condition->if_false(); elseNode != nullptr) {
+        // Explicit add else node.
+        // TODO(linyhe): selection_range for else node.
+        GNDocumentSymbol elseSymbol{
+            GNSymbolKind::Operator, elseNode->GetRange(), "else",
+            elseNode->GetRange(), ConstructDocumentSymbolAST(elseNode)};
+        symbol.children.emplace_back(elseSymbol);
       }
       result.emplace_back(std::move(symbol));
     } else if (const auto* block = node->AsBlock()) {

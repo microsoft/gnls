@@ -110,3 +110,33 @@ export const toolchainGNAnalyzeResult: TestAnalyzeResultType[] = [
     variable: 'os_specific_option',
   },
 ]
+
+//simple_build/build/toolchain/BUILD.gn
+export const toolchainGNPartialDocumentSymbolResult: TestDocumentSymbol = {
+  name: 'toolchain("gcc")',
+  kind: ls.SymbolKind.Function,
+  children: [
+    {
+      name: 'tool("solink")',
+      kind: ls.SymbolKind.Function,
+      children: [
+        {
+          name: 'is_mac',
+          kind: ls.SymbolKind.Boolean,
+          children: [
+            {
+              name: 'else',
+              kind: ls.SymbolKind.Operator,
+              children: [
+                {
+                  name: 'os_specific_option',
+                  kind: ls.SymbolKind.Variable,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+}
