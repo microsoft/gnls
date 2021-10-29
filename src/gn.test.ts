@@ -68,6 +68,16 @@ it('simple_build/build/toolchain/BUILD.gn', async () => {
   gn.update(rootPath, rootContent)
 
   testGNAnalyze(rootPath, testData.toolchainGNAnalyzeResult)
+  let currentSymbols = gn.parse(rootPath, rootContent).symbols
+  let testSymbol = testData.toolchainGNPartialDocumentSymbolResult
+  while (testSymbol) {
+    const symbol = currentSymbols.find((it) => it.name === testSymbol.name)
+    console.log(`CurrentSymbol: ${symbol.name}`)
+    expect(symbol).toBeTruthy()
+    expect(symbol.kind).toEqual(testSymbol.kind)
+    currentSymbols = symbol.children
+    testSymbol = testSymbol.children?.[0]
+  }
 
   gn.close(rootPath)
 })
@@ -82,4 +92,5 @@ it('simple_build/build/BUILD.gn', async () => {
   testData.rootGNBuildDocumentSymbolResult.forEach((it, i) => {
     matchDocumentSymbol(scope.symbols[i], it)
   })
+  gn.close(rootPath)
 })
