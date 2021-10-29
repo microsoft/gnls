@@ -8,11 +8,15 @@
 #include <napi.h>
 
 #include <base/files/file_util.h>
+#include <base/logging.h>
 #include <gn/command_format.h>
 #include <gn/filesystem_utils.h>
 #include <gn/functions.h>
 #include <gn/input_file.h>
+#include <gn/location.h>
+#include <gn/parse_tree.h>
 #include <gn/parser.h>
+#include <gn/token.h>
 #include <gn/tokenizer.h>
 #include <gn/variables.h>
 
@@ -23,8 +27,24 @@ struct GNContext {
   const IdentifierNode* variable = nullptr;
 };
 
+enum class GNSymbolKind {
+  Unknown = 0,
+  Function = 12,
+  Variable = 13,
+  Boolean = 17,
+};
+
+struct GNDocumentSymbol {
+  const GNSymbolKind kind = GNSymbolKind::Unknown;
+  const LocationRange range;
+  const std::string name;
+  const LocationRange selection_range;
+  std::list<GNDocumentSymbol> children;
+};
+
 struct GNScope {
   std::vector<const FunctionCallNode*> declares;
+  std::list<GNDocumentSymbol> symbols;
 };
 
 template <typename T>
@@ -32,6 +52,15 @@ static auto JSValue(Napi::Env env, const std::vector<T>& vector)
     -> Napi::Value {
   auto result = Napi::Array::New(env);
   for (const auto& item : vector) {
+    result[result.Length()] = JSValue(env, item);
+  }
+  return result;
+}
+
+template <typename T>
+static auto JSValue(Napi::Env env, const std::list<T>& list) -> Napi::Value {
+  auto result = Napi::Array::New(env);
+  for (const auto& item : list) {
     result[result.Length()] = JSValue(env, item);
   }
   return result;
@@ -125,6 +154,20 @@ static auto JSValue(Napi::Env env, const GNScope& scope) -> Napi::Value {
     declares[declares.Length()] = declare;
   }
   result["declares"] = declares;
+  result["symbols"] = JSValue(env, scope.symbols);
+  return result;
+}
+
+static auto JSValue(Napi::Env env, const GNDocumentSymbol& symbol)
+    -> Napi::Value {
+  auto result = Napi::Object::New(env);
+  result["kind"] = static_cast<int>(symbol.kind);
+  result["name"] = symbol.name;
+  result["range"] = JSValue(env, symbol.range);
+  result["selectionRange"] = JSValue(env, symbol.selection_range);
+  if (!symbol.children.empty()) {
+    result["children"] = JSValue(env, symbol.children);
+  }
   return result;
 }
 
@@ -221,6 +264,7 @@ class GNDocument {
         }
       }
     }
+    scope.symbols = ConstructDocumentSymbolAST(node_.get());
     return scope;
   }
 
@@ -302,10 +346,129 @@ class GNDocument {
     return result;
   }
 
+  static auto TokenToString(const Token& token) -> std::string_view {
+    return token.value();
+  }
+
+  auto ExpressionToString(const ParseNode* node) -> std::string {
+    // TODO (linyhe): Use std::format and std::string_view once -std=c++20.
+    // Currently string_view do not provide .c_str(), which is not compatible
+    // for c-style formater (like base::StringFormat).
+    if (const auto* accessor = node->AsAccessor()) {
+      std::string_view base = accessor->base().value();
+      if (const auto* member = accessor->member()) {
+        // base.member
+        return std::string().append(base).append(".").append(
+            TokenToString(member->value()));
+      }
+      // base[subscript]
+      return std::string()
+          .append(base)
+          .append("[")
+          .append(ExpressionToString(accessor->subscript()))
+          .append("]");
+    }
+    if (const auto* binary_op = node->AsBinaryOp()) {
+      return ExpressionToString(binary_op->left())
+          .append(TokenToString(binary_op->op()))
+          .append(ExpressionToString(binary_op->right()));
+    }
+    if (const auto* identifier = node->AsIdentifier()) {
+      return std::string(TokenToString(identifier->value()));
+    }
+    if (const auto* unary_op = node->AsUnaryOp()) {
+      return std::string()
+          .append(TokenToString(unary_op->op()))
+          .append(ExpressionToString(unary_op->operand()));
+    }
+    if (const auto* function_call = node->AsFunctionCall()) {
+      return std::string()
+          .append(TokenToString(function_call->function()))
+          .append(ExpressionToString(function_call->args()));
+    }
+    if (const auto* list = node->AsList()) {
+      std::string str = std::string().append(TokenToString(list->Begin()));
+      for (size_t i = 0; i != list->contents().size(); i++) {
+        str.append(ExpressionToString(list->contents()[i].get()));
+        if (i != list->contents().size() - 1) {
+          str.append(", ");
+        }
+      }
+      return str.append(ExpressionToString(list->End()));
+    }
+    if (const auto* literal = node->AsLiteral()) {
+      return std::string(TokenToString(literal->value()));
+    }
+    if (const auto* end = node->AsEnd()) {
+      return std::string().append(TokenToString(end->value()));
+    }
+    return "UNKNOWN";
+  }
+
+  auto ConstructDocumentSymbolAST(const ParseNode* node)
+      -> std::list<GNDocumentSymbol> {
+    std::list<GNDocumentSymbol> result;
+    if (node == nullptr) {
+      return result;
+    }
+
+    // Only handle statement like node.
+    // StatementList = { Statement } .
+    // Statement     = Assignment | Call | Condition .
+    if (const auto* binary_op = node->AsBinaryOp()) {
+      // Assignment  = LValue AssignOp Expr .
+      // AssignOp    = "=" | "+=" | "-=" .
+      switch (binary_op->op().type()) {
+        case Token::EQUAL:
+        case Token::PLUS_EQUALS:
+        case Token::MINUS_EQUALS:
+          result.emplace_back(
+              GNDocumentSymbol{GNSymbolKind::Variable,
+                               binary_op->GetRange(),
+                               ExpressionToString(binary_op->left()),
+                               binary_op->left()->GetRange(),
+                               {}});
+        default:;
+      }
+    } else if (const auto* function_call = node->AsFunctionCall()) {
+      // Call        = identifier "(" [ ExprList ] ")" [ Block ] .
+      LocationRange selection_range = function_call->function().range().Union(
+          function_call->args()->GetRange());
+      GNDocumentSymbol symbol{GNSymbolKind::Function,
+                              function_call->GetRange(),
+                              ExpressionToString(function_call),
+                              selection_range,
+                              {}};
+      symbol.children = ConstructDocumentSymbolAST(function_call->block());
+      result.emplace_back(symbol);
+    } else if (const auto* condition = node->AsCondition()) {
+      // Condition     = "if" "(" Expr ")" Block
+      //                 [ "else" ( Condition | Block ) ] .
+      GNDocumentSymbol symbol{GNSymbolKind::Boolean, condition->GetRange(),
+                              ExpressionToString(condition->condition()),
+                              condition->condition()->GetRange(),
+                              ConstructDocumentSymbolAST(condition->if_true())};
+      if (condition->if_false() != nullptr) {
+        symbol.children.splice(
+            symbol.children.end(),
+            ConstructDocumentSymbolAST(condition->if_false()));
+      }
+      result.emplace_back(std::move(symbol));
+    } else if (const auto* block = node->AsBlock()) {
+      // Block        = "{" [ StatementList ] "}" .
+      for (const auto& statement : block->statements()) {
+        result.splice(result.end(),
+                      ConstructDocumentSymbolAST(statement.get()));
+      }
+    }
+    return result;
+  }
+
   InputFile file_;
   base::FilePath root_;
   Err err_;
   std::vector<Token> tokens_;
+  // Root node of GN context.
   std::unique_ptr<ParseNode> node_;
 };
 

@@ -21,6 +21,7 @@ connection.onInitialize(() => {
       hoverProvider: true,
       definitionProvider: true,
       documentFormattingProvider: true,
+      documentSymbolProvider: true,
     },
   }
 })
@@ -48,6 +49,12 @@ documents.onDidClose((event) => {
       diagnostics: [],
     })
   }
+})
+
+connection.onDocumentSymbol((params) => {
+  const uri = params.textDocument.uri
+  const file = URI.parse(uri).fsPath
+  return getDocumentSymbol(file)
 })
 
 connection.onCompletion((params) => {
@@ -314,4 +321,21 @@ function getFormatted(file: string, lines: number): ls.TextEdit {
     }
   }
   return null
+}
+
+function getDocumentSymbol(file: string): ls.DocumentSymbol[] {
+  const mapToDocumentSymbol = (symbol: gn.GNDocumentSymbol): ls.DocumentSymbol => {
+    const result: ls.DocumentSymbol = {
+      name: symbol.name,
+      kind: symbol.kind,
+      range: getRange(symbol.range),
+      selectionRange: getRange(symbol.range),
+    }
+    if (symbol.children) {
+      result.children = symbol.children.map(mapToDocumentSymbol)
+    }
+    return result
+  }
+  const symbols = gn.parse(file).symbols
+  return symbols.map(mapToDocumentSymbol)
 }

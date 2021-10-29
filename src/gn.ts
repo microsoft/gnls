@@ -1,4 +1,5 @@
 import * as os from 'os'
+import * as ls from 'vscode-languageserver/node'
 
 export type TokenType = 'identifier' | 'literal' | ''
 export type HelpType = 'all' | 'function' | 'variable'
@@ -30,12 +31,21 @@ export interface Context {
 
 export interface Scope {
   declares: {function: string; arguments: string[]; range: Range}[]
+  symbols: GNDocumentSymbol[]
 }
 
 export interface Help {
   basic: string
   full: string
   link: string
+}
+
+export interface GNDocumentSymbol {
+  kind: ls.SymbolKind
+  name: string
+  range: Range
+  selectionRange: Range
+  children?: GNDocumentSymbol[]
 }
 
 const addon = require(`../build/${os.platform()}-${os.arch()}.node`) // eslint-disable-line @typescript-eslint/no-var-requires

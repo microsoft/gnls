@@ -28,6 +28,25 @@ function testGNAnalyze(rootPath: string, data: testData.TestAnalyzeResultType[])
   })
 }
 
+function matchDocumentSymbol(symbol: gn.GNDocumentSymbol, data: testData.TestDocumentSymbol) {
+  const assertRange = (range: gn.Range) => {
+    expect(range.begin.line).toBeGreaterThan(0)
+    expect(range.begin.column).toBeGreaterThan(0)
+    expect(range.end.line).toBeGreaterThan(0)
+    expect(range.end.column).toBeGreaterThan(0)
+  }
+  expect(symbol.name).toEqual(data.name)
+  expect(symbol.kind).toEqual(data.kind)
+  expect(symbol.children?.length || 0).toEqual(data.children?.length || 0)
+  assertRange(symbol.range)
+  assertRange(symbol.selectionRange)
+  if (data.children) {
+    data.children.forEach((it, i) => {
+      matchDocumentSymbol(symbol.children[i], it)
+    })
+  }
+}
+
 it('simple_build/BUILD.gn', async () => {
   const rootPath = `${root}/BUILD.gn`
   const rootContent = await fs.readFile(rootPath, 'utf-8')
@@ -51,4 +70,16 @@ it('simple_build/build/toolchain/BUILD.gn', async () => {
   testGNAnalyze(rootPath, testData.toolchainGNAnalyzeResult)
 
   gn.close(rootPath)
+})
+
+it('simple_build/build/BUILD.gn', async () => {
+  const rootPath = `${root}/build/BUILD.gn`
+  const rootContent = await fs.readFile(rootPath, 'utf-8')
+  gn.update(rootPath, rootContent)
+
+  const scope = gn.parse(rootPath, rootContent)
+  expect(scope.symbols.length).toEqual(testData.rootGNBuildDocumentSymbolResult.length)
+  testData.rootGNBuildDocumentSymbolResult.forEach((it, i) => {
+    matchDocumentSymbol(scope.symbols[i], it)
+  })
 })

@@ -1,3 +1,11 @@
+import * as ls from 'vscode-languageserver/node'
+
+export interface TestDocumentSymbol {
+  name: string
+  kind: ls.SymbolKind
+  children?: TestDocumentSymbol[]
+}
+
 export type TestAnalyzeResultType = {
   location: string
   root: string
@@ -16,6 +24,7 @@ export type TestAnalyzeResultType = {
   variable: string
 }
 
+//simple_build/BUILD.gn
 export const rootGNAnalyzeResult: TestAnalyzeResultType[] = [
   {
     // ':hello_static' in executable('hello')
@@ -51,6 +60,43 @@ export const rootGNAnalyzeResult: TestAnalyzeResultType[] = [
   },
 ]
 
+//simple_build/build/BUILD.gn
+export const rootGNBuildDocumentSymbolResult: TestDocumentSymbol[] = [
+  {
+    name: 'config("compiler_defaults")',
+    kind: ls.SymbolKind.Function,
+    children: [
+      {
+        name: 'current_os=="linux"',
+        kind: ls.SymbolKind.Boolean,
+        children: [
+          {
+            name: 'cflags',
+            kind: ls.SymbolKind.Variable,
+          },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'config("executable_ldconfig")',
+    kind: ls.SymbolKind.Function,
+    children: [
+      {
+        name: '!is_mac',
+        kind: ls.SymbolKind.Boolean,
+        children: [
+          {
+            name: 'ldflags',
+            kind: ls.SymbolKind.Variable,
+          },
+        ],
+      },
+    ],
+  },
+]
+
+//simple_build/build/toolchain/BUILD.gn
 export const toolchainGNAnalyzeResult: TestAnalyzeResultType[] = [
   {
     location: '42:32',
