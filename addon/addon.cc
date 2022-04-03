@@ -205,7 +205,7 @@ class GNDocument {
   auto AnalyzeContext(int line, int column) -> GNContext {
     GNContext context;
     context.root = &root_;
-    auto nodes = TraversePath(Location(&file_, line, column, 0));
+    auto nodes = TraversePath(Location(&file_, line, column));
     if (const auto* last = nodes.empty() ? nullptr : nodes.back()) {
       if (const auto* accessor = last->AsAccessor()) {
         context.token = &accessor->base();
