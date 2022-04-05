@@ -9,6 +9,7 @@ import * as data from './data'
 
 const connection = ls.createConnection(ls.ProposedFeatures.all)
 const documents = new ls.TextDocuments(lstd.TextDocument)
+const files = new Map<string, Set<string>>()
 
 connection.onInitialize(() => {
   return {
@@ -28,21 +29,26 @@ connection.onInitialize(() => {
 
 documents.onDidChangeContent((event) => {
   const uri = event.document.uri
-  const {scheme, fsPath: file} = URI.parse(uri)
-  if (scheme == 'file') {
-    const content = event.document.getText()
-    gn.update(file, content)
-    connection.sendDiagnostics({
-      uri: uri,
-      diagnostics: getDiagnostics(file),
-    })
-  }
+  const file = URI.parse(uri).fsPath
+  if (!files.has(file)) files.set(file, new Set())
+  files.get(file).add(uri)
+  const content = event.document.getText()
+  gn.update(file, content)
+  connection.sendDiagnostics({
+    uri: uri,
+    diagnostics: getDiagnostics(file),
+  })
 })
 
 documents.onDidClose((event) => {
   const uri = event.document.uri
-  const {scheme, fsPath: file} = URI.parse(uri)
-  if (scheme == 'file') {
+  const file = URI.parse(uri).fsPath
+  if (files.has(file)) {
+    const uris = files.get(file)
+    uris.delete(uri)
+    if (!uris.size) files.delete(file)
+  }
+  if (!files.has(file)) {
     gn.close(file)
     connection.sendDiagnostics({
       uri: uri,
