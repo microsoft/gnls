@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Fix occasional crashes when viewing diff
+
 ## 0.1.2
 
 - Add document symbol support for target definitions and if conditions
