@@ -2,7 +2,7 @@
   {
     "name": "gn",
     "repo": "https://gn.googlesource.com/gn",
-    "commit": "859dde4a7f34a4383179522f8e1061dcffac8691",
+    "commit": "b4851eb2062f76a880c07f7fa0d12913beb6d79e",
     "patches": ["gn.patch"]
   }
 ]
