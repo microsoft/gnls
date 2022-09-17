@@ -105,7 +105,7 @@ function addon(debug: boolean, arch: string) {
   process.env.CFLAGS = cflags.join(' ')
   chdir('addon/gn')
   // TODO(#8): gn static libs are always built with release config for now
-  exec('python', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
+  exec('python3', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
   chdir('addon')
@@ -126,6 +126,7 @@ function compdb() {
     case 'darwin':
       fixes.push([/^cc/, pipe('xcrun', '--find', 'cc').trim()])
       fixes.push([/^c\+\+/, pipe('xcrun', '--find', 'c++').trim()])
+      fixes.push([/"-arch .*?"/, ''])
       break
   }
   data.forEach((entry) => {
