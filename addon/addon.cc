@@ -1,5 +1,6 @@
 #include <map>
 #include <memory>
+#include <ranges>
 #include <stack>
 #include <string>
 #include <utility>
@@ -252,9 +253,9 @@ class GNDocument {
         continue;
       }
       if (const auto* block = node->AsBlock()) {
-        for (auto item = block->statements().rbegin();
-             item != block->statements().rend(); item++) {
-          nodes.push(item->get());
+        for (const auto& item :
+             std::ranges::reverse_view(block->statements())) {
+          nodes.push(item.get());
         }
       } else if (const auto* condition = node->AsCondition()) {
         nodes.push(condition->if_false());

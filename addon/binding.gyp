@@ -19,7 +19,7 @@
       '<(rootdir)/gn/out/<(target_arch)/gn_lib<(STATIC_LIB_SUFFIX)',
     ],
     'cflags_cc': [
-      '-std=c++17',
+      '-std=c++20',
       '-Wall',
       '-Wextra',
       '-Werror',
@@ -37,7 +37,7 @@
       }],
       ['OS=="mac"', {
         'xcode_settings': {
-          'CLANG_CXX_LANGUAGE_STANDARD': 'c++17',
+          'CLANG_CXX_LANGUAGE_STANDARD': 'c++20',
           'GCC_TREAT_WARNINGS_AS_ERRORS': 'YES',
           'OTHER_CPLUSPLUSFLAGS': [
             '$(inherited)',
@@ -57,7 +57,7 @@
               '4127',
             ],
             'AdditionalOptions': [
-              '-std:c++17',
+              '-std:c++20',
             ],
           },
         },
