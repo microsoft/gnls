@@ -72,7 +72,6 @@ it('simple_build/build/toolchain/BUILD.gn', async () => {
   let testSymbol = testData.toolchainGNPartialDocumentSymbolResult
   while (testSymbol) {
     const symbol = currentSymbols.find((it) => it.name === testSymbol.name)
-    console.log(`CurrentSymbol: ${symbol.name}`)
     expect(symbol).toBeTruthy()
     expect(symbol.kind).toEqual(testSymbol.kind)
     currentSymbols = symbol.children
@@ -93,4 +92,10 @@ it('simple_build/build/BUILD.gn', async () => {
     matchDocumentSymbol(scope.symbols[i], it)
   })
   gn.close(rootPath)
+})
+
+it('execute', async () => {
+  const rootPath = `./addon/gn`
+  const out = `${rootPath}/out/arm64`
+  gn.execute(out)
 })

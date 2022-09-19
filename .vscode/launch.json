@@ -3,11 +3,20 @@
   "configurations": [
     {
       "name": "RunTest",
-      "type": "pwa-node",
+      "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "args": ["--abort-on-uncaught-exception"],
       "skipFiles": ["<node_internals>/**"],
       "preLaunchTask": "Build"
+    },
+    {
+      "name": "DebugTest",
+      "type": "lldb",
+      "request": "launch",
+      "preLaunchTask": "Build",
+      "program": "node",
+      "args": ["${workspaceFolder}/node_modules/.bin/jest"]
     },
     {
       "name": "RunExtension",

@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <map>
 #include <memory>
 #include <stack>
@@ -18,6 +19,7 @@
 #include <gn/parser.h>
 #include <gn/token.h>
 #include <gn/tokenizer.h>
+#include <gn/setup.h>
 #include <gn/variables.h>
 
 struct GNContext {
@@ -486,9 +488,18 @@ class GNAddon : public Napi::Addon<GNAddon> {
     DefineAddon(exports, {InstanceMethod("parse", &GNAddon::Parse)});
     DefineAddon(exports, {InstanceMethod("format", &GNAddon::Format)});
     DefineAddon(exports, {InstanceMethod("help", &GNAddon::Help)});
+    DefineAddon(exports, {InstanceMethod("execute", &GNAddon::Execute)});
   }
 
  private:
+  auto Execute(const Napi::CallbackInfo& info) -> Napi::Value {
+    auto env = info.Env();
+    std::string file = info[0].As<Napi::String>();
+    auto setup = std::make_unique<Setup>();
+    printf("%s\n", file.c_str());
+    setup->DoSetup(file, false);
+    return env.Null();
+  }
   auto Update(const Napi::CallbackInfo& info) -> Napi::Value {
     auto env = info.Env();
     std::string file = info[0].As<Napi::String>();
