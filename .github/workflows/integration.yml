@@ -32,13 +32,13 @@ jobs:
         run: |
           case "$RUNNER_OS" in
             Linux)
-              sudo apt update
-              sudo apt install -y ninja-build clang-tidy-12
+              sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+              sudo apt install -y ninja-build clang-tidy-15 clang-format-15
               for name in clang clang++ clang-format; do
                 sudo update-alternatives --remove-all $name
               done
               for name in clang clang++ clang-format clang-tidy; do
-                sudo update-alternatives --install /usr/bin/$name $name /usr/bin/$name-12 100
+                sudo update-alternatives --install /usr/bin/$name $name /usr/bin/$name-15 100
               done
               ;;
             macOS)
