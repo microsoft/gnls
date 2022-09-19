@@ -95,7 +95,7 @@ it('simple_build/build/BUILD.gn', async () => {
 })
 
 it('execute', async () => {
-  const rootPath = `./addon/gn`
-  const out = `${rootPath}/out/arm64`
-  gn.execute(out)
+  const rootPath = `./addon/gn/examples/simple_build/`
+  const out = `./out`
+  expect(gn.execute(rootPath, out)).toBeTruthy()
 })

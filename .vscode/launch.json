@@ -16,7 +16,7 @@
       "request": "launch",
       "preLaunchTask": "Build",
       "program": "node",
-      "args": ["${workspaceFolder}/node_modules/.bin/jest"]
+      "args": ["${workspaceFolder}/node_modules/.bin/jest"],
     },
     {
       "name": "RunExtension",

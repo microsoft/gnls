@@ -56,4 +56,4 @@ export const analyze = addon.analyze as (file: string, line: number, column: num
 export const parse = addon.parse as (file: string, content?: string) => Scope
 export const format = addon.format as (file: string, content?: string) => string
 export const help = addon.help as (type: HelpType, name: string) => Help
-export const execute = addon.execute as (folder: string) => void
+export const execute = addon.execute as (folder: string, outDir: string) => boolean

@@ -4,7 +4,11 @@
 #include <stack>
 #include <string>
 #include <utility>
+#include <filesystem>
 #include <vector>
+#include "base/command_line.h"
+#include "gn/source_dir.h"
+#include "util/msg_loop.h"
 
 #include <napi.h>
 
@@ -495,10 +499,19 @@ class GNAddon : public Napi::Addon<GNAddon> {
   auto Execute(const Napi::CallbackInfo& info) -> Napi::Value {
     auto env = info.Env();
     std::string file = info[0].As<Napi::String>();
+    std::string outDir = info[1].As<Napi::String>();
+    std::filesystem::current_path(file);
+
+    base::CommandLine::Init(0, nullptr);
+    MsgLoop msgLoop;
     auto setup = std::make_unique<Setup>();
-    printf("%s\n", file.c_str());
-    setup->DoSetup(file, false);
-    return env.Null();
+    if (!setup->DoSetup(outDir, true)) {
+      return Napi::Boolean::New(env, false);
+    }
+    if (!setup->Run()) {
+      return Napi::Boolean::New(env, false);
+    }
+    return Napi::Boolean::New(env, true);
   }
   auto Update(const Napi::CallbackInfo& info) -> Napi::Value {
     auto env = info.Env();
