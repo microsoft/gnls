@@ -2,10 +2,12 @@ import * as path from 'path'
 import {ExtensionContext} from 'vscode'
 import {LanguageClient, TransportKind} from 'vscode-languageclient/node'
 
-export function activate(context: ExtensionContext): void {
+let client: LanguageClient | undefined
+
+export async function activate(context: ExtensionContext) {
   const module = context.asAbsolutePath(path.join('build', 'server.js'))
   const transport = TransportKind.ipc
-  const languageClient = new LanguageClient(
+  client = new LanguageClient(
     'GN Language Server',
     {
       run: {module, transport},
@@ -20,5 +22,12 @@ export function activate(context: ExtensionContext): void {
       documentSelector: [{language: 'gn'}],
     }
   )
-  context.subscriptions.push(languageClient.start())
+  await client.start()
+}
+
+export async function deactivate() {
+  if (client) {
+    await client.dispose()
+    client = null
+  }
 }
