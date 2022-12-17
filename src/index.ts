@@ -27,7 +27,7 @@ export async function activate(context: ExtensionContext) {
 
 export async function deactivate() {
   if (client) {
-    await client.dispose()
-    client = null
+    await client.stop()
+    client = undefined
   }
 }
