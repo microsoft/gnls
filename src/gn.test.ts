@@ -7,14 +7,12 @@ const root = './addon/gn/examples/simple_build'
 function testAnalyzeResultItem(res: gn.Context, data: testData.TestAnalyzeResultType) {
   expect(res.root).toEqual(root.replace('./', ''))
 
-  expect(res.token.type).toEqual(data.token.type)
-  expect(res.token.value).toEqual(data.token.value)
+  expect(res.token?.type).toEqual(data.token.type)
+  expect(res.token?.value).toEqual(data.token.value)
 
-  const compareLocation = (location: gn.Location, it: string) => {
-    expect(`${location.line}:${location.column}`).toEqual(it)
-  }
-  compareLocation(res.token.range.begin, data.token.range.begin)
-  compareLocation(res.token.range.end, data.token.range.end)
+  const locationString = (location?: gn.Location) => `${location?.line}:${location?.column}`
+  expect(locationString(res.token?.range.begin)).toEqual(data.token.range.begin)
+  expect(locationString(res.token?.range.end)).toEqual(data.token.range.end)
 
   expect(res.function).toEqual(data.function)
   expect(res.variable).toEqual(data.variable)
@@ -28,21 +26,21 @@ function testGNAnalyze(rootPath: string, data: testData.TestAnalyzeResultType[])
   })
 }
 
-function matchDocumentSymbol(symbol: gn.GNDocumentSymbol, data: testData.TestDocumentSymbol) {
-  const assertRange = (range: gn.Range) => {
-    expect(range.begin.line).toBeGreaterThan(0)
-    expect(range.begin.column).toBeGreaterThan(0)
-    expect(range.end.line).toBeGreaterThan(0)
-    expect(range.end.column).toBeGreaterThan(0)
+function matchDocumentSymbol(symbol: gn.GNDocumentSymbol | undefined, data: testData.TestDocumentSymbol) {
+  const assertRange = (range?: gn.Range) => {
+    expect(range?.begin.line).toBeGreaterThan(0)
+    expect(range?.begin.column).toBeGreaterThan(0)
+    expect(range?.end.line).toBeGreaterThan(0)
+    expect(range?.end.column).toBeGreaterThan(0)
   }
-  expect(symbol.name).toEqual(data.name)
-  expect(symbol.kind).toEqual(data.kind)
-  expect(symbol.children?.length || 0).toEqual(data.children?.length || 0)
-  assertRange(symbol.range)
-  assertRange(symbol.selectionRange)
+  expect(symbol?.name).toEqual(data.name)
+  expect(symbol?.kind).toEqual(data.kind)
+  expect(symbol?.children?.length || 0).toEqual(data.children?.length || 0)
+  assertRange(symbol?.range)
+  assertRange(symbol?.selectionRange)
   if (data.children) {
     data.children.forEach((it, i) => {
-      matchDocumentSymbol(symbol.children[i], it)
+      matchDocumentSymbol(symbol?.children?.[i], it)
     })
   }
 }
@@ -53,9 +51,9 @@ it('simple_build/BUILD.gn', async () => {
   gn.update(rootPath, rootContent)
 
   const sharedLibrary = gn.help('all', 'shared_library')
-  expect(sharedLibrary.link).toEqual('https://gn.googlesource.com/gn/+/main/docs/reference.md#func_shared_library')
-  expect(sharedLibrary.basic).toEqual('shared_library: Declare a shared library target.')
-  expect(sharedLibrary.full).toContain('shared_library: Declare a shared library target.')
+  expect(sharedLibrary?.link).toEqual('https://gn.googlesource.com/gn/+/main/docs/reference.md#func_shared_library')
+  expect(sharedLibrary?.basic).toEqual('shared_library: Declare a shared library target.')
+  expect(sharedLibrary?.full).toContain('shared_library: Declare a shared library target.')
 
   testGNAnalyze(rootPath, testData.rootGNAnalyzeResult)
 
@@ -68,13 +66,13 @@ it('simple_build/build/toolchain/BUILD.gn', async () => {
   gn.update(rootPath, rootContent)
 
   testGNAnalyze(rootPath, testData.toolchainGNAnalyzeResult)
-  let currentSymbols = gn.parse(rootPath, rootContent).symbols
-  let testSymbol = testData.toolchainGNPartialDocumentSymbolResult
+  let currentSymbols = gn.parse(rootPath, rootContent)?.symbols
+  let testSymbol = <gn.GNDocumentSymbol | undefined>testData.toolchainGNPartialDocumentSymbolResult
   while (testSymbol) {
-    const symbol = currentSymbols.find((it) => it.name === testSymbol.name)
+    const symbol = currentSymbols?.find((it) => it.name === testSymbol?.name)
     expect(symbol).toBeTruthy()
-    expect(symbol.kind).toEqual(testSymbol.kind)
-    currentSymbols = symbol.children
+    expect(symbol?.kind).toEqual(testSymbol.kind)
+    currentSymbols = symbol?.children
     testSymbol = testSymbol.children?.[0]
   }
 
@@ -87,9 +85,9 @@ it('simple_build/build/BUILD.gn', async () => {
   gn.update(rootPath, rootContent)
 
   const scope = gn.parse(rootPath, rootContent)
-  expect(scope.symbols.length).toEqual(testData.rootGNBuildDocumentSymbolResult.length)
+  expect(scope?.symbols.length).toEqual(testData.rootGNBuildDocumentSymbolResult.length)
   testData.rootGNBuildDocumentSymbolResult.forEach((it, i) => {
-    matchDocumentSymbol(scope.symbols[i], it)
+    matchDocumentSymbol(scope?.symbols[i], it)
   })
   gn.close(rootPath)
 })

@@ -571,6 +571,7 @@ class GNAddon : public Napi::Addon<GNAddon> {
     auto env = info.Env();
     std::string type = info[0].As<Napi::String>();
     std::string name = info[1].As<Napi::String>();
+    bool found = false;
     std::string basic;
     std::string full;
     std::string link;
@@ -578,6 +579,7 @@ class GNAddon : public Napi::Addon<GNAddon> {
       const auto& functions = functions::GetFunctions();
       auto function = functions.find(name);
       if (function != functions.end()) {
+        found = true;
         basic = function->second.help_short;
         full = function->second.help;
         link = link_ + "#func_" + name;
@@ -589,20 +591,25 @@ class GNAddon : public Napi::Addon<GNAddon> {
       auto builtin_variable = builtin_variables.find(name);
       auto target_variable = target_variables.find(name);
       if (builtin_variable != builtin_variables.end()) {
+        found = true;
         basic = builtin_variable->second.help_short;
         full = builtin_variable->second.help;
         link = link_ + "#var_" + name;
       } else if (target_variable != target_variables.end()) {
+        found = true;
         basic = target_variable->second.help_short;
         full = target_variable->second.help;
         link = link_ + "#var_" + name;
       }
     }
-    auto result = Napi::Object::New(env);
-    result["basic"] = basic;
-    result["full"] = full;
-    result["link"] = link;
-    return result;
+    if (found) {
+      auto result = Napi::Object::New(env);
+      result["basic"] = basic;
+      result["full"] = full;
+      result["link"] = link;
+      return result;
+    }
+    return env.Null();
   }
 
   std::map<std::string, GNDocument> documents_;

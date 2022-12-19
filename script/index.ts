@@ -24,7 +24,6 @@ function list(dir: string, regex: RegExp): string[] {
 
 function pipe(cmd: string, ...args: string[]): string {
   cmd = canonicalize(cmd)
-  args = args.filter(Boolean)
   const result = child_process.spawnSync(cmd, args, {stdio: 'pipe'})
   return result.stdout.toString()
 }
@@ -36,7 +35,6 @@ function chdir(dir: string) {
 
 function exec(cmd: string, ...args: string[]) {
   cmd = canonicalize(cmd)
-  args = args.filter(Boolean)
   const result = child_process.spawnSync(cmd, args, {stdio: 'inherit'})
   if (result.status !== 0) {
     console.error('Failed to execute:', cmd, ...args, `(${result.error?.message})`)
@@ -83,7 +81,7 @@ function bundle(debug: boolean) {
 }
 
 function addon(debug: boolean, arch: string) {
-  const cflags = []
+  const cflags = <string[]>[]
   switch (os.platform()) {
     case 'linux':
       // TODO: not implemented
@@ -105,11 +103,11 @@ function addon(debug: boolean, arch: string) {
   process.env.CFLAGS = cflags.join(' ')
   chdir('addon/gn')
   // TODO(#8): gn static libs are always built with release config for now
-  exec('python3', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
+  exec('python', 'build/gen.py', '--out-path', canonicalize(`out/${arch}`))
   exec('ninja', '-C', canonicalize(`out/${arch}`), lib('base'), lib('gn_lib'))
   delete process.env.CFLAGS
   chdir('addon')
-  exec(npx('node-gyp'), 'rebuild', debug && '--debug', '--arch', arch)
+  exec(npx('node-gyp'), 'rebuild', debug ? '--debug' : '--release', '--arch', arch)
   copy(`build/${debug ? 'Debug' : 'Release'}/addon.node`, `../build/${os.platform()}-${arch}.node`)
 }
 
