@@ -154,11 +154,7 @@ function run(target: string) {
       ensure('deps.json')
       chdir('script')
       exec(npx('ts-node'), 'syntax.ts', '../build')
-      if (os.platform() != 'win32') {
-        compdb()
-      } else {
-        console.warn('Generating compile_commands.json is not supported on Windows.')
-      }
+      compdb()
       break
     case 'build':
       bundle(false)
