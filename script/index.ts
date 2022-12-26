@@ -184,10 +184,7 @@ function run(target: string) {
       exec(npx('jest'))
       exec(npx('eslint'), '.')
       exec(npx('prettier'), '--check', '.')
-      if (os.platform() != 'win32') {
-        // TODO: compile_commands.json is not supported by cmake on windows.
-        exec('clang-tidy', ...list('addon', /\.cc$/))
-      }
+      exec('clang-tidy', ...list('addon', /\.cc$/))
       exec('clang-format', '--dry-run', '-Werror', ...list('addon', /\.cc$/))
       break
     case 'format':
