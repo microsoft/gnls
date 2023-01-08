@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Enable strict null checks to fix occasional crashes
+
 ## 0.1.3
 
 - Fix occasional crashes when viewing diff

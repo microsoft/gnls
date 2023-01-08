@@ -18,32 +18,29 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v3
         with:
-          node-version: '*'
+          node-version: latest
+          check-latest: true
           cache: npm
       - name: Install Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: 3.x
+          check-latest: true
       - name: Install VisualStudio
         uses: egor-tensin/vs-shell@v2
         with:
           arch: x64
       - name: Install Tools
         run: |
+          addpath() { export PATH="$1:$PATH" && echo "$1" >> $GITHUB_PATH ; }
           case "$RUNNER_OS" in
             Linux)
               sudo apt update
-              sudo apt install -y ninja-build clang-tidy-12
-              for name in clang clang++ clang-format; do
-                sudo update-alternatives --remove-all $name
-              done
-              for name in clang clang++ clang-format clang-tidy; do
-                sudo update-alternatives --install /usr/bin/$name $name /usr/bin/$name-12 100
-              done
+              sudo apt install -y ninja-build
               ;;
             macOS)
-              brew install ninja llvm
-              echo "$(brew --prefix llvm)/bin" >> $GITHUB_PATH
+              addpath "$(brew --prefix llvm@14)/bin"
+              brew install ninja
               ;;
             Windows)
               choco install ninja
@@ -53,6 +50,16 @@ jobs:
               exit 1
               ;;
           esac
+      - name: Check Environment
+        run: |
+          trace() { echo "::group::$@" && "$@" && echo "::endgroup::" ; }
+          trace node --version
+          trace python --version
+          trace clang --version
+          trace clang++ --version
+          trace clang-format --version
+          trace clang-tidy --version
+          trace ninja --version
       - name: Setup Cache
         uses: actions/cache@v3
         with:
