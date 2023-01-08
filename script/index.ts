@@ -2,7 +2,6 @@ import * as child_process from 'child_process'
 import * as fs from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import * as process from 'process'
 
 function canonicalize(file: string): string {
   return path.join(...file.split(path.posix.sep))
@@ -77,7 +76,12 @@ function ensure(deps: string) {
 function bundle(debug: boolean) {
   const environment = debug ? 'development' : 'production'
   chdir('.')
-  exec(npx('rollup'), '--config', '--environment', `NODE_ENV:${environment}`)
+  exec(
+    npx('rollup'),
+    '--config',
+    '--configPlugin=typescript={module:"esnext"}',
+    `--environment=NODE_ENV:${environment}`
+  )
 }
 
 function addon(debug: boolean, arch: string) {
