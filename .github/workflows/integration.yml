@@ -39,8 +39,8 @@ jobs:
               sudo apt install -y ninja-build
               ;;
             macOS)
-              addpath "$(brew --prefix llvm@14)/bin"
-              brew install ninja
+              brew install llvm@15 ninja
+              addpath "$(brew --prefix llvm@15)/bin"
               ;;
             Windows)
               choco install ninja
@@ -95,6 +95,8 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     steps:
+      - name: Install Tools
+        run: npm install --global @vscode/vsce
       - name: Download Archive
         uses: actions/download-artifact@v3
         with:
@@ -105,10 +107,27 @@ jobs:
         with:
           name: addons
           path: build
-      - name: Generate Packages
-        run: npx vsce package --out gnls.vsix
-      - name: Upload Packages
+      - name: Generate Package
+        run: vsce package --out gnls.vsix
+      - name: Upload Package
         uses: actions/upload-artifact@v3
         with:
-          name: packages
+          name: package
           path: gnls.vsix
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Install Tools
+        run: npm install --global @vscode/vsce
+      - name: Download Package
+        uses: actions/download-artifact@v3
+        with:
+          name: package
+          path: .
+      - name: Publish Package
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: vsce publish --skip-duplicate --packagePath gnls.vsix
