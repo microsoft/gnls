@@ -1,8 +1,45 @@
 {
   "compilerOptions": {
+    /* Specify the target version of ECMAScript */
     "target": "es2021",
+
+    /* Specify the module system */
     "module": "commonjs",
+
+    /* Specify how modules are resolved */
     "moduleResolution": "node",
-    "strictNullChecks": true
-  }
+
+    /* Enable strict null checks */
+    "strictNullChecks": true,
+
+    /* Report errors when this is set to true */
+    "noImplicitAny": true,
+
+    /* Disallow implicit any types */
+    "noImplicitThis": true,
+
+    /* Report errors for unused variables */
+    "noUnusedLocals": true,
+
+    /* Report errors for unused parameters */
+    "noUnusedParameters": true,
+
+    /* Generate source maps */
+    "sourceMap": true,
+
+    /* Emit output to a single file */
+    "outFile": "output.js",
+
+    /* Specify the root directory of input files */
+    "rootDir": "./src",
+
+    /* Specify the output directory for compiled files */
+    "outDir": "./dist"
+  },
+
+  /* Specify files to include in the compilation */
+  "include": ["./src/**/*.ts"],
+
+  /* Specify files to exclude from the compilation */
+  "exclude": ["node_modules"]
 }
