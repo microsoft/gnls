@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.4
 
 - Enable strict null checks to fix occasional crashes
 
