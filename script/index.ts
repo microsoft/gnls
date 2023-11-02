@@ -80,12 +80,12 @@ function bundle(debug: boolean) {
     npx('rollup'),
     '--config',
     '--configPlugin=typescript={module:"esnext"}',
-    `--environment=NODE_ENV:${environment}`
+    `--environment=NODE_ENV:${environment}`,
   )
 }
 
 function addon(debug: boolean, arch: string) {
-  const cflags = <string[]>[]
+  const cflags = [] as string[]
   switch (os.platform()) {
     case 'linux':
       // TODO: not implemented
@@ -119,10 +119,10 @@ function compdb() {
   const file = 'compile_commands.json'
   chdir('addon')
   exec(npx('node-gyp'), 'configure', '--', '--format=compile_commands_json')
-  copy(`Debug/${file}`, file)
+  copy(`build/Debug/${file}`, file)
   remove('Debug')
   remove('Release')
-  const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as {[key: string]: string}[]
+  const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as Record<string, string>[]
   const fixes = [] as [RegExp, string][]
   switch (os.platform()) {
     case 'darwin':

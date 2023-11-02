@@ -21,7 +21,7 @@ export function targetFunctions(): string[] {
 }
 
 export function targetVariables(target?: string): string[] {
-  const groups = <string[]>(target ? data.targetGroups[target] || [] : Object.keys(data.groupVariables))
+  const groups = target ? data.targetGroups[target] ?? [] : Object.keys(data.groupVariables)
   const variables = groups.flatMap((group) => data.groupVariables[group])
   return [...new Set(variables)]
 }
@@ -29,13 +29,13 @@ export function targetVariables(target?: string): string[] {
 export function functionDetail(name?: string): FunctionDetail {
   if (!name) return {}
   if (data.targetGroups[name]) return {isTarget: true}
-  return data.functionDetail[name] || {}
+  return data.functionDetail[name] ?? {}
 }
 
 export function variableDetail(name?: string): VariableDetail {
   if (!name) return {}
   if (data.builtinVariables[name]) return {isBuiltin: true}
-  return data.variableDetail[name] || {}
+  return data.variableDetail[name] ?? {}
 }
 
 const data = {
@@ -69,7 +69,7 @@ const data = {
     tool: true,
     toolchain: true,
     write_file: true,
-  },
+  } as Record<string, boolean>,
   builtinVariables: {
     current_cpu: true,
     current_os: true,
@@ -88,7 +88,7 @@ const data = {
     target_name: true,
     target_os: true,
     target_out_dir: true,
-  },
+  } as Record<string, boolean>,
   targetGroups: {
     action: ['action'],
     action_foreach: ['action'],
@@ -105,7 +105,7 @@ const data = {
     shared_library: ['general', 'deps', 'flags', 'configs', 'rust', 'rust_extra', 'swift'],
     source_set: ['general', 'deps', 'flags', 'configs'],
     static_library: ['general', 'deps', 'flags', 'configs', 'static', 'rust', 'swift'],
-  },
+  } as Record<string, string[]>,
   groupVariables: {
     general: [
       'check_includes',
@@ -191,7 +191,7 @@ const data = {
     rust: ['aliased_deps', 'crate_name', 'crate_root'],
     rust_extra: ['crate_type'],
     swift: ['bridge_header', 'module_name'],
-  },
+  } as Record<string, string[]>,
   functionDetail: {
     assert: {}, // (condition[, error])
     declare_args: {}, // () {}
@@ -222,7 +222,7 @@ const data = {
     tool: {}, // (type) {}
     toolchain: {}, // (name) {}
     write_file: {}, // (filename, data, output_conversion = "")
-  } as {[key: string]: FunctionDetail},
+  } as Record<string, FunctionDetail>,
   variableDetail: {
     aliased_deps: {},
     all_dependent_configs: {isInput: true, isLabel: true},
@@ -298,5 +298,5 @@ const data = {
     xcasset_compiler_flags: {},
     xcode_extra_attributes: {},
     xcode_test_application_name: {},
-  } as {[key: string]: VariableDetail},
+  } as Record<string, VariableDetail>,
 }

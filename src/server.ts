@@ -27,21 +27,21 @@ connection.onInitialize(() => {
   }
 })
 
-documents.onDidChangeContent((event) => {
+documents.onDidChangeContent(async (event) => {
   const uri = event.document.uri
   const file = URI.parse(uri).fsPath
-  const uris = files.get(file) || new Set()
+  const uris = files.get(file) ?? new Set()
   uris.add(uri)
   files.set(file, uris)
   const content = event.document.getText()
   gn.update(file, content)
-  connection.sendDiagnostics({
+  await connection.sendDiagnostics({
     uri: uri,
     diagnostics: getDiagnostics(file),
   })
 })
 
-documents.onDidClose((event) => {
+documents.onDidClose(async (event) => {
   const uri = event.document.uri
   const file = URI.parse(uri).fsPath
   const uris = files.get(file)
@@ -51,7 +51,7 @@ documents.onDidClose((event) => {
   }
   if (!files.has(file)) {
     gn.close(file)
-    connection.sendDiagnostics({
+    await connection.sendDiagnostics({
       uri: uri,
       diagnostics: [],
     })
@@ -116,11 +116,11 @@ function getRange(range: gn.Range): ls.Range {
 }
 
 function getDiagnostics(file: string): ls.Diagnostic[] {
-  const result = <ls.Diagnostic[]>[]
+  const result = [] as ls.Diagnostic[]
   const error = gn.validate(file)
   if (error) {
     result.push({
-      range: getRange(error.ranges[0] || {begin: error.location, end: null}),
+      range: getRange(error.ranges[0] ?? {begin: error.location, end: null}),
       severity: ls.DiagnosticSeverity.Error,
       source: 'gnls',
       message: [error.message, error.help].join('\n').trim(),
@@ -132,10 +132,10 @@ function getDiagnostics(file: string): ls.Diagnostic[] {
 function getFunctionCompletion(name: string): ls.CompletionItem {
   const detail = data.functionDetail(name)
   const help = gn.help('function', name)
-  const result = <ls.CompletionItem>{
+  const result = {
     label: name,
     kind: detail.isTarget ? ls.CompletionItemKind.Class : ls.CompletionItemKind.Function,
-  }
+  } as ls.CompletionItem
   if (help) {
     result.detail = help.basic
     result.documentation = {
@@ -149,10 +149,10 @@ function getFunctionCompletion(name: string): ls.CompletionItem {
 function getVariableCompletion(name: string): ls.CompletionItem {
   const detail = data.variableDetail(name)
   const help = gn.help('variable', name)
-  const result = <ls.CompletionItem>{
+  const result = {
     label: name,
     kind: detail.isBuiltin ? ls.CompletionItemKind.Variable : ls.CompletionItemKind.Field,
-  }
+  } as ls.CompletionItem
   if (help) {
     result.detail = help.basic
     result.documentation = {
@@ -176,7 +176,7 @@ function getLabelCompletion(name: string): ls.CompletionItem {
 }
 
 function getCompletions(file: string, line: number, column: number): ls.CompletionItem[] {
-  const result = <ls.CompletionItem[]>[]
+  const result = [] as ls.CompletionItem[]
   const context = gn.analyze(file, line, column)
   switch (context?.token?.type) {
     case 'literal': {
@@ -197,8 +197,8 @@ function getCompletions(file: string, line: number, column: number): ls.Completi
                 const scope = gn.parse(filepath, content)
                 scope?.declares.forEach((declare) => {
                   const func = declare.function
-                  const arg0 = (declare.arguments[0] || '').replace(/^"|"$/g, '')
-                  const arg1 = (declare.arguments[1] || '').replace(/^"|"$/g, '')
+                  const arg0 = (declare.arguments[0] ?? '').replace(/^"|"$/g, '')
+                  const arg1 = (declare.arguments[1] ?? '').replace(/^"|"$/g, '')
                   const target = func == 'target' ? arg0 : func
                   const label = func == 'target' ? arg1 : arg0
                   if (data.functionDetail(target).isTarget && label) {
@@ -228,7 +228,7 @@ function getCompletions(file: string, line: number, column: number): ls.Completi
       result.push(...data.builtinVariables().map(getVariableCompletion))
       if (context?.function) {
         const func = context.function.name
-        const arg0 = (context.function.arguments[0] || '').replace(/^"|"$/g, '')
+        const arg0 = (context.function.arguments[0] ?? '').replace(/^"|"$/g, '')
         const target = func == 'target' ? arg0 : func
         if (func == 'template') {
           result.push(...data.targetFunctions().map(getFunctionCompletion))
@@ -264,7 +264,7 @@ function getHover(file: string, line: number, column: number): ls.Hover | undefi
 }
 
 function getDefinition(file: string, line: number, column: number): ls.DefinitionLink[] {
-  const result = <ls.DefinitionLink[]>[]
+  const result = [] as ls.DefinitionLink[]
   const context = gn.analyze(file, line, column)
   switch (context?.token?.type) {
     case 'literal': {
@@ -281,8 +281,8 @@ function getDefinition(file: string, line: number, column: number): ls.Definitio
             return {
               originSelectionRange: origin,
               targetUri: URI.file(filepath).toString(),
-              targetRange: range || target,
-              targetSelectionRange: range || target,
+              targetRange: range ?? target,
+              targetSelectionRange: range ?? target,
             }
           }
         )(getRange(context.token.range), {
@@ -300,8 +300,8 @@ function getDefinition(file: string, line: number, column: number): ls.Definitio
             const scope = gn.parse(filepath, content)
             const declare = scope?.declares.find((declare) => {
               const func = declare.function
-              const arg0 = (declare.arguments[0] || '').replace(/^"|"$/g, '')
-              const arg1 = (declare.arguments[1] || '').replace(/^"|"$/g, '')
+              const arg0 = (declare.arguments[0] ?? '').replace(/^"|"$/g, '')
+              const arg1 = (declare.arguments[1] ?? '').replace(/^"|"$/g, '')
               const label = func == 'target' ? arg1 : arg0
               return label == target
             })
@@ -318,7 +318,7 @@ function getDefinition(file: string, line: number, column: number): ls.Definitio
 }
 
 function getFormatted(file: string, lines: number): ls.TextEdit[] {
-  const result = <ls.TextEdit[]>[]
+  const result = [] as ls.TextEdit[]
   const code = gn.format(file)
   if (code) {
     result.push({
@@ -345,6 +345,6 @@ function getDocumentSymbol(file: string): ls.DocumentSymbol[] {
     }
     return result
   }
-  const symbols = gn.parse(file)?.symbols || []
+  const symbols = gn.parse(file)?.symbols ?? []
   return symbols.map(mapToDocumentSymbol)
 }

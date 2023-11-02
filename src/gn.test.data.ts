@@ -6,7 +6,7 @@ export interface TestDocumentSymbol {
   children?: TestDocumentSymbol[]
 }
 
-export type TestAnalyzeResultType = {
+export interface TestAnalyzeResultType {
   location: string
   root: string
   token: {
