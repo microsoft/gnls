@@ -4,24 +4,24 @@ import * as testData from './gn.test.data'
 
 const root = './addon/gn/examples/simple_build'
 
-function testAnalyzeResultItem(res: gn.Context, data: testData.TestAnalyzeResultType) {
-  expect(res.root).toEqual(root.replace('./', ''))
+function testAnalyzeResultItem(res: gn.Context | null, data: testData.TestAnalyzeResultType) {
+  expect(res?.root).toEqual(root.replace('./', ''))
 
-  expect(res.token?.type).toEqual(data.token.type)
-  expect(res.token?.value).toEqual(data.token.value)
+  expect(res?.token?.type).toEqual(data.token.type)
+  expect(res?.token?.value).toEqual(data.token.value)
 
   const locationString = (location?: gn.Location) => `${location?.line}:${location?.column}`
-  expect(locationString(res.token?.range.begin)).toEqual(data.token.range.begin)
-  expect(locationString(res.token?.range.end)).toEqual(data.token.range.end)
+  expect(locationString(res?.token?.range.begin)).toEqual(data.token.range.begin)
+  expect(locationString(res?.token?.range.end)).toEqual(data.token.range.end)
 
-  expect(res.function).toEqual(data.function)
-  expect(res.variable).toEqual(data.variable)
+  expect(res?.function).toEqual(data.function)
+  expect(res?.variable).toEqual(data.variable)
 }
 
 function testGNAnalyze(rootPath: string, data: testData.TestAnalyzeResultType[]) {
   data.forEach((data) => {
-    const args = (s: string) => [rootPath, ...s.split(':').map((it) => parseInt(it, 10))]
-    const res: gn.Context = gn.analyze.apply(null, args(data.location))
+    const args = (s: string) => [rootPath, ...s.split(':').map((it) => parseInt(it, 10))] as [string, number, number]
+    const res = gn.analyze.apply(null, args(data.location))
     testAnalyzeResultItem(res, data)
   })
 }
@@ -35,7 +35,7 @@ function matchDocumentSymbol(symbol: gn.GNDocumentSymbol | undefined, data: test
   }
   expect(symbol?.name).toEqual(data.name)
   expect(symbol?.kind).toEqual(data.kind)
-  expect(symbol?.children?.length || 0).toEqual(data.children?.length || 0)
+  expect(symbol?.children?.length ?? 0).toEqual(data.children?.length ?? 0)
   assertRange(symbol?.range)
   assertRange(symbol?.selectionRange)
   if (data.children) {
@@ -67,7 +67,7 @@ it('simple_build/build/toolchain/BUILD.gn', async () => {
 
   testGNAnalyze(rootPath, testData.toolchainGNAnalyzeResult)
   let currentSymbols = gn.parse(rootPath, rootContent)?.symbols
-  let testSymbol = <gn.GNDocumentSymbol | undefined>testData.toolchainGNPartialDocumentSymbolResult
+  let testSymbol = testData.toolchainGNPartialDocumentSymbolResult as gn.GNDocumentSymbol | undefined
   while (testSymbol) {
     const symbol = currentSymbols?.find((it) => it.name === testSymbol?.name)
     expect(symbol).toBeTruthy()

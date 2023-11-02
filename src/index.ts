@@ -20,7 +20,7 @@ export async function activate(context: ExtensionContext) {
     },
     {
       documentSelector: [{language: 'gn'}],
-    }
+    },
   )
   await client.start()
 }

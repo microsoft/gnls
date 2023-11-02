@@ -15,12 +15,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+      - name: Install Pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
       - name: Install NodeJS
         uses: actions/setup-node@v3
         with:
           node-version: latest
           check-latest: true
-          cache: npm
+          cache: pnpm
       - name: Install Python
         uses: actions/setup-python@v4
         with:
@@ -39,8 +43,8 @@ jobs:
               sudo apt install -y ninja-build
               ;;
             macOS)
-              brew install llvm@15 ninja
-              addpath "$(brew --prefix llvm@15)/bin"
+              brew install llvm ninja
+              addpath "$(brew --prefix llvm)/bin"
               ;;
             Windows)
               choco install ninja
@@ -66,13 +70,13 @@ jobs:
           key: ${{ runner.os }}-${{ hashFiles('addon/deps.json') }}
           path: addon/gn
       - name: Prepare Dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       - name: Build Debug
-        run: npm run debug
+        run: pnpm debug
       - name: Run Test
-        run: npm test
+        run: pnpm test
       - name: Build Release
-        run: npm run build
+        run: pnpm build
       - name: Upload Archive
         uses: actions/upload-artifact@v3
         if: ${{ runner.os == 'Linux' }}

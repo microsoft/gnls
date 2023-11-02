@@ -36,10 +36,10 @@ enum class GNSymbolKind {
 };
 
 struct GNDocumentSymbol {
-  const GNSymbolKind kind = GNSymbolKind::Unknown;
-  const LocationRange range;
-  const std::string name;
-  const LocationRange selection_range;
+  GNSymbolKind kind = GNSymbolKind::Unknown;
+  LocationRange range;
+  std::string name;
+  LocationRange selection_range;
   std::list<GNDocumentSymbol> children;
 };
 
@@ -423,13 +423,15 @@ class GNDocument {
         case Token::EQUAL:
         case Token::PLUS_EQUALS:
         case Token::MINUS_EQUALS:
-          result.emplace_back(
+          result.emplace_back() =
               GNDocumentSymbol{GNSymbolKind::Variable,
                                binary_op->GetRange(),
                                ExpressionToString(binary_op->left()),
                                binary_op->left()->GetRange(),
-                               {}});
-        default:;
+                               {}};
+          break;
+        default:
+          break;
       }
     } else if (const auto* function_call = node->AsFunctionCall()) {
       // Call        = identifier "(" [ ExprList ] ")" [ Block ] .
@@ -441,7 +443,7 @@ class GNDocument {
                               selection_range,
                               {}};
       symbol.children = ConstructDocumentSymbolAST(function_call->block());
-      result.emplace_back(symbol);
+      result.emplace_back() = std::move(symbol);
     } else if (const auto* condition = node->AsCondition()) {
       // Condition     = "if" "(" Expr ")" Block
       //                 [ "else" ( Condition | Block ) ] .
@@ -457,7 +459,7 @@ class GNDocument {
             elseNode->GetRange(), ConstructDocumentSymbolAST(elseNode)};
         symbol.children.emplace_back(elseSymbol);
       }
-      result.emplace_back(std::move(symbol));
+      result.emplace_back() = std::move(symbol);
     } else if (const auto* block = node->AsBlock()) {
       // Block        = "{" [ StatementList ] "}" .
       for (const auto& statement : block->statements()) {

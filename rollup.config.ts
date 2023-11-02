@@ -6,7 +6,7 @@ import terser from '@rollup/plugin-terser'
 
 const production = process.env.NODE_ENV == 'production'
 
-export default <RollupOptions>{
+export default {
   input: ['src/index.ts', 'src/server.ts'],
   output: {
     dir: 'build',
@@ -21,4 +21,4 @@ export default <RollupOptions>{
     production && terser(),
   ].filter(Boolean),
   external: ['vscode'],
-}
+} as RollupOptions

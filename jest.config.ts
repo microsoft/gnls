@@ -1,6 +1,6 @@
-import type {Config} from '@jest/types'
+import type {Config} from 'jest'
 
-export default <Config.InitialOptions>{
+export default {
   roots: ['<rootDir>/src'],
   transform: {'\\.tsx?$': 'ts-jest'},
-}
+} as Config
