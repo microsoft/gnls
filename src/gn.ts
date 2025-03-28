@@ -50,7 +50,7 @@ export interface GNDocumentSymbol {
   children?: GNDocumentSymbol[]
 }
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const addon = require(`../build/${os.platform()}-${os.arch()}.node`) as Record<string, unknown>
 export const update = addon.update as (file: string, content: string) => null
 export const close = addon.close as (file: string) => null

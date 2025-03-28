@@ -21,8 +21,8 @@ export function targetFunctions(): string[] {
 }
 
 export function targetVariables(target?: string): string[] {
-  const groups = target ? data.targetGroups[target] ?? [] : Object.keys(data.groupVariables)
-  const variables = groups.flatMap((group) => data.groupVariables[group])
+  const groups = target ? (data.targetGroups[target] ?? []) : Object.keys(data.groupVariables)
+  const variables = groups.flatMap((group) => data.groupVariables[group] ?? [])
   return [...new Set(variables)]
 }
 

@@ -34,9 +34,9 @@ function chdir(dir: string) {
 
 function exec(cmd: string, ...args: string[]) {
   cmd = canonicalize(cmd)
-  const result = child_process.spawnSync(cmd, args, {stdio: 'inherit'})
+  const result = child_process.spawnSync(cmd, args, {stdio: 'inherit', shell: os.platform() == 'win32'})
   if (result.status !== 0) {
-    console.error('Failed to execute:', cmd, ...args, `(${result.error?.message})`)
+    console.error('Failed to execute:', cmd, ...args, `(${result.error?.message ?? 'null'})`)
     process.exit(-1)
   }
 }
@@ -58,7 +58,7 @@ function ensure(deps: string) {
   }[]
   data.forEach((entry) => {
     const dir = canonicalize(entry.name)
-    const git = (...args: string[]) => exec('git', '-C', dir, ...args)
+    const git = exec.bind(null, 'git', '-C', dir)
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir)
       git('init')
@@ -79,7 +79,7 @@ function bundle(debug: boolean) {
   exec(
     npx('rollup'),
     '--config',
-    '--configPlugin=typescript={module:"esnext"}',
+    '--configPlugin=typescript={module:`esnext`}',
     `--environment=NODE_ENV:${environment}`,
   )
 }
@@ -122,7 +122,11 @@ function compdb() {
   copy(`build/Debug/${file}`, file)
   remove('Debug')
   remove('Release')
-  const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as Record<string, string>[]
+  const data = JSON.parse(fs.readFileSync(file, {encoding: 'utf8'})) as {
+    directory: string
+    file: string
+    command: string
+  }[]
   const fixes = [] as [RegExp, string][]
   switch (os.platform()) {
     case 'darwin':
@@ -139,13 +143,13 @@ function compdb() {
   fs.writeFileSync(file, JSON.stringify(data))
 }
 
-function run(target: string) {
+function run(target?: string) {
   switch (target) {
     case 'prepare':
       chdir('addon')
       ensure('deps.json')
       chdir('script')
-      exec(npx('ts-node'), 'syntax.ts', '../build')
+      exec(npx('jiti'), 'syntax.ts', '../build')
       compdb()
       break
     case 'build':

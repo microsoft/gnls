@@ -27,7 +27,7 @@ struct GNContext {
   const IdentifierNode* variable = nullptr;
 };
 
-enum class GNSymbolKind {
+enum class GNSymbolKind : std::uint8_t {
   Unknown = 0,
   Function = 12,
   Variable = 13,
@@ -49,8 +49,8 @@ struct GNScope {
 };
 
 template <typename T>
-static auto JSValue(Napi::Env env, const std::vector<T>& vector)
-    -> Napi::Value {
+static auto JSValue(Napi::Env env,
+                    const std::vector<T>& vector) -> Napi::Value {
   auto result = Napi::Array::New(env);
   for (const auto& item : vector) {
     result[result.Length()] = JSValue(env, item);
@@ -159,8 +159,8 @@ static auto JSValue(Napi::Env env, const GNScope& scope) -> Napi::Value {
   return result;
 }
 
-static auto JSValue(Napi::Env env, const GNDocumentSymbol& symbol)
-    -> Napi::Value {
+static auto JSValue(Napi::Env env,
+                    const GNDocumentSymbol& symbol) -> Napi::Value {
   auto result = Napi::Object::New(env);
   result["kind"] = static_cast<int>(symbol.kind);
   result["name"] = symbol.name;
