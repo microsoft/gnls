@@ -86,7 +86,7 @@ const language = {
   ],
 }
 
-const output = process.argv[2]
+const output = process.argv[2] ?? '.'
 fs.mkdirSync(output, {recursive: true})
 fs.writeFileSync(path.join(output, 'grammar.json'), JSON.stringify(grammar))
 fs.writeFileSync(path.join(output, 'language.json'), JSON.stringify(language))

@@ -10,7 +10,8 @@ function testAnalyzeResultItem(res: gn.Context | null, data: testData.TestAnalyz
   expect(res?.token?.type).toEqual(data.token.type)
   expect(res?.token?.value).toEqual(data.token.value)
 
-  const locationString = (location?: gn.Location) => `${location?.line}:${location?.column}`
+  const locationString = (location?: gn.Location) =>
+    `${location?.line.toString() ?? ''}:${location?.column.toString() ?? ''}`
   expect(locationString(res?.token?.range.begin)).toEqual(data.token.range.begin)
   expect(locationString(res?.token?.range.end)).toEqual(data.token.range.end)
 

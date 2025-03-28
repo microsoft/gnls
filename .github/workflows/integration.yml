@@ -7,26 +7,26 @@ jobs:
     name: Validate
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+        runner: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.runner }}
     defaults:
       run:
         shell: bash
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: latest
       - name: Install NodeJS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: latest
           check-latest: true
           cache: pnpm
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.x
           check-latest: true
@@ -43,8 +43,8 @@ jobs:
               sudo apt install -y ninja-build
               ;;
             macOS)
-              brew install llvm ninja
-              addpath "$(brew --prefix llvm)/bin"
+              brew install llvm@18 ninja
+              addpath "$(brew --prefix llvm@18)/bin"
               ;;
             Windows)
               choco install ninja
@@ -65,7 +65,7 @@ jobs:
           trace clang-tidy --version
           trace ninja --version
       - name: Setup Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: ${{ runner.os }}-${{ hashFiles('addon/deps.json') }}
           path: addon/gn
@@ -78,10 +78,10 @@ jobs:
       - name: Build Release
         run: pnpm build
       - name: Upload Archive
-        uses: actions/upload-artifact@v3
-        if: ${{ runner.os == 'Linux' }}
+        uses: actions/upload-artifact@v4
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
         with:
-          name: archive
+          name: archive-${{ matrix.runner }}
           path: |
             README.md
             CHANGELOG.md
@@ -90,9 +90,9 @@ jobs:
             build
             !build/*.node
       - name: Upload Addons
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: addons
+          name: addons-${{ matrix.runner }}
           path: build/*.node
   build:
     name: Build
@@ -102,19 +102,21 @@ jobs:
       - name: Install Tools
         run: npm install --global @vscode/vsce
       - name: Download Archive
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: archive
+          pattern: archive-*
           path: .
+          merge-multiple: true
       - name: Download Addons
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: addons
+          pattern: addons-*
           path: build
+          merge-multiple: true
       - name: Generate Package
         run: vsce package --out gnls.vsix
       - name: Upload Package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: package
           path: gnls.vsix
@@ -127,7 +129,7 @@ jobs:
       - name: Install Tools
         run: npm install --global @vscode/vsce
       - name: Download Package
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: package
           path: .

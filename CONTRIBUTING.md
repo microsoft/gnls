@@ -15,6 +15,7 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 ## Prerequisite
 
 - [Node.js](https://nodejs.org/)
+- [Pnpm](https://pnpm.io/)
 - [Python](https://www.python.org/)
 - [Ninja](https://ninja-build.org/)
 - C++ build tools required by [node-gyp](https://github.com/nodejs/node-gyp)
@@ -25,14 +26,14 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 After cloning the repo, run these commands to install or update dependencies:
 
 ```
-npm install
+pnpm install
 ```
 
 Run these commands to build a package for release:
 
 ```
-npm run build
-npm run package
+pnpm run build
+pnpm run package
 ```
 
 To develop or debug, open the code folder in VS Code, install the recommended extensions for code intellisense and debugging support.
@@ -41,7 +42,7 @@ Some tasks and debug configurations are provided for your convenience:
 
 - `Build` task: build the JavaScript and C++ code.
 
-  This is usually sufficient for development as other things rarely change and can be built with `npm run prepare`, which is already done when doing `npm install`. By default, this can also be invoked with keyboard shortcut <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>.
+  This is usually sufficient for development as other things rarely change and can be built with `pnpm run prepare`, which is already done when doing `pnpm install`. By default, this can also be invoked with keyboard shortcut <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> or <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>.
 
 - `RunTest` config: run the tests.
 

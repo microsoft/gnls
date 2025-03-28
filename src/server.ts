@@ -111,7 +111,7 @@ function getPosition(location: gn.Location): ls.Position {
 function getRange(range: gn.Range): ls.Range {
   return {
     start: getPosition(range.begin),
-    end: range.end ? getPosition(range.end) : {line: range.begin.line, character: 0},
+    end: getPosition(range.end),
   }
 }
 
@@ -120,7 +120,12 @@ function getDiagnostics(file: string): ls.Diagnostic[] {
   const error = gn.validate(file)
   if (error) {
     result.push({
-      range: getRange(error.ranges[0] ?? {begin: error.location, end: null}),
+      range: getRange(
+        error.ranges[0] ?? {
+          begin: error.location,
+          end: {...error.location, line: error.location.line + 1, column: 1},
+        },
+      ),
       severity: ls.DiagnosticSeverity.Error,
       source: 'gnls',
       message: [error.message, error.help].join('\n').trim(),
@@ -187,7 +192,7 @@ function getCompletions(file: string, line: number, column: number): ls.Completi
           const parts = string.replace(/^\/+/, '').split(':', 2)
           const colon = parts.length > 1
           const base = string.startsWith('//') ? context.root : string.startsWith('/') ? '/' : path.dirname(file)
-          const relative = colon ? parts[0] : parts[0].replace(/[^/]+$/, '')
+          const relative = (colon ? parts[0] : parts[0]?.replace(/[^/]+$/, '')) ?? ''
           const absolute = path.join(base, relative)
           try {
             if (colon) {
@@ -273,7 +278,7 @@ function getDefinition(file: string, line: number, column: number): ls.Definitio
         const parts = string.replace(/^\/+/, '').split(':', 2)
         const colon = parts.length > 1
         const base = string.startsWith('//') ? context.root : string.startsWith('/') ? '/' : path.dirname(file)
-        const relative = parts[0]
+        const relative = parts[0] ?? ''
         const absolute = path.join(base, relative)
         const linkWithRange = (
           (origin: ls.Range, target: ls.Range) =>
