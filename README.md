@@ -1,5 +1,8 @@
 # GN Language Server
 
+> [!IMPORTANT]
+> Archived in favor of [google/gn-language-server](https://github.com/google/gn-language-server).
+
 Code IntelliSense for [GN](https://gn.googlesource.com/gn) build system.
 
 ## Features
